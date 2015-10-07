@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+{% load staticfiles %}
+
+<html>
+<head>
+    <title>
+        Flashcards
+    </title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="site-masthead">
+        <div class="container">
+            <nav class="navbar navbar-default">
+                <ul class="nav navbar-nav">
+                <li><a class="nav-item" href="#">Home</a></li>
+                <li><a class="nav-item" href="#">Browse Decks</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                {% block body_block %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
