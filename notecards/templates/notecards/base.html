@@ -14,8 +14,24 @@
         <div class="container">
             <nav class="navbar navbar-default">
                 <ul class="nav navbar-nav">
-                <li><a class="nav-item" href="#">Home</a></li>
+                <li><a class="nav-item" href="{% url 'index' %}">Home</a></li>
                 <li><a class="nav-item" href="#">Browse Decks</a></li>
+                {% if user.is_authenticated %}
+                    <li><a class="nav-item" href="#">Your Decks</a></li>
+                    <li role="presentation" class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">User CP <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">Profile</a></li>
+                            <li><a href="#">Decks</a></li>
+                            <li><a href="#">Create a Deck</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="{% url 'logout' %}">Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li><a class="nav-item" href="{% url 'login' %}">Login</a></li>
+                    <li><a class="nav-item" href="{% url 'register' %}">Register</a></li>
+                {% endif %}
                 </ul>
             </nav>
         </div>
@@ -27,5 +43,7 @@
             </div>
         </div>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </body>
 </html>

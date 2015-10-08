@@ -1,0 +1,9 @@
+{% extends 'notecards/base.html' %}
+
+{% block body_block %}
+    <form action="{% url 'login' %}" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Login" />
+    </form>
+{% endblock body_block %}
