@@ -1,37 +1,55 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core import serializers
-from notecards.models import Deck, Card
-from notecards.forms import deckForm, cardForm
+from django.core.urlresolvers import reverse
 from django.db.models import Max, Min, F
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+
+from notecards.models import Deck, Card
+from notecards.forms import deckForm, cardForm
 
 import random
 
 
 def index(request):
-    return render(request, 'blog/index.html', {})
+    return render(request, 'notecards/index.html', {})
+
+
+def register(request):
+    if (request.method == "POST") and (not request.user.is_authenticated()):
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('index'))
+    else:
+        form = UserCreationForm()
+        return render(request, 'notecards/register.html', {'form': form})
 
 
 def user_login(request):
     if (request.method == "POST") and (not request.user.is_authenticated()):
-        username = request.POST.get('user')
-        password = request.POST.get('pass')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
 
         user = authenticate(username=username, password=password)
 
         if user:
             if user.is_active:
                 login(request, user)
-                return index(request)
+                return HttpResponseRedirect(reverse('index'))
             else:
                 return HttpResponse("Your account is disabled")
         else:
-            return HttpResponse("Invalid login details")
+            form = AuthenticationForm(request)
+            return render(request, 'notecards/login.html', {'form': form})
+    elif request.method == "GET":
+        form = AuthenticationForm()
+        return render(request, 'notecards/login.html', {'form': form})
     else:
-        return render(request, 'notecards/login.html', {})
+        return HttpResponse("You are already logged in!")
 
 
 @login_required
@@ -114,7 +132,7 @@ def create_deck(request):
             # TODO: handle case where form isn't valid
     form = deckForm()
     # TODO: render new form
-    return HttpResponse('failed')
+    return render(request, 'create_deck.html', {'form': form})
 
 
 @login_required

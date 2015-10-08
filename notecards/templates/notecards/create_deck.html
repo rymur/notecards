@@ -1,0 +1,10 @@
+{% extends 'notecards/base.html' %}
+
+{% block body_block %}
+    <h1>Create a deck</h1>
+    <form action="{url 'create_deck' %}" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Submit" />
+    </form>
+{% endblock %}
