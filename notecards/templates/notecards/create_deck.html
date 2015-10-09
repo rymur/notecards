@@ -2,9 +2,22 @@
 
 {% block body_block %}
     <h1>Create a deck</h1>
-    <form action="{url 'create_deck' %}" method="post">
+    <form action="{% url 'create_deck' %}" method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {# note: form-group won't do anything without being able 
+                 to control HTML element classes #}
+        <div class="form-group">
+            {{ form.title.label_tag }}
+            {{ form.title }}
+        </div>
+        <div class="form-group">
+            {{ form.description.label_tag }}
+            {{ form.description }}
+        </div>
+        <div class="form-group">
+            {{ form.tags.label_tag }}
+            {{ form.tags }}
+        </div>
         <input type="submit" value="Submit" />
     </form>
 {% endblock %}
