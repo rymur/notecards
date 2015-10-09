@@ -8,6 +8,7 @@
         Flashcards
     </title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
 </head>
 <body>
     <div class="site-masthead">
@@ -15,15 +16,19 @@
             <nav class="navbar navbar-default">
                 <ul class="nav navbar-nav">
                 <li><a class="nav-item" href="{% url 'index' %}">Home</a></li>
-                <li><a class="nav-item" href="#">Browse Decks</a></li>
+                <li><a class="nav-item" href="{% url 'decks' %}">Browse Decks</a></li>
                 {% if user.is_authenticated %}
                     <li><a class="nav-item" href="#">Your Decks</a></li>
+                {% endif %}
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                {% if user.is_authenticated %}
                     <li role="presentation" class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">User CP <span class="caret"></span></a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ user.get_username }} <span class="caret"></span></a>
                         <ul class="dropdown-menu">
                             <li><a href="#">Profile</a></li>
-                            <li><a href="#">Decks</a></li>
-                            <li><a href="#">Create a Deck</a></li>
+                            <li><a href="#">Your Decks</a></li>
+                            <li><a href="{% url 'create_deck' %}">Create a Deck</a></li>
                             <li role="separator" class="divider"></li>
                             <li><a href="{% url 'logout' %}">Logout</a></li>
                         </ul>

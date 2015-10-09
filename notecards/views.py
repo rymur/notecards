@@ -3,10 +3,9 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.db.models import Max, Min, F
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm
 
 from notecards.models import Deck, Card
 from notecards.forms import deckForm, cardForm
@@ -24,38 +23,11 @@ def register(request):
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('index'))
-    else:
+    elif request.method == "GET" and (not request.user.is_authenticated()):
         form = UserCreationForm()
         return render(request, 'notecards/register.html', {'form': form})
-
-
-def user_login(request):
-    if (request.method == "POST") and (not request.user.is_authenticated()):
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        user = authenticate(username=username, password=password)
-
-        if user:
-            if user.is_active:
-                login(request, user)
-                return HttpResponseRedirect(reverse('index'))
-            else:
-                return HttpResponse("Your account is disabled")
-        else:
-            form = AuthenticationForm(request)
-            return render(request, 'notecards/login.html', {'form': form})
-    elif request.method == "GET":
-        form = AuthenticationForm()
-        return render(request, 'notecards/login.html', {'form': form})
     else:
-        return HttpResponse("You are already logged in!")
-
-
-@login_required
-def user_logout(request):
-    logout(request)
-    return index(request)
+        return HttpResponse("You are already registered!")
 
 
 @login_required
@@ -109,6 +81,19 @@ def get_all_decks(request):
     return HttpResponse(decksJSON, content_type='application/json')
 
 
+def get_decks(request):
+    if request.method == 'GET':
+        decks = Deck.objects.order_by('-dateCreated')[:50]
+        return render(request, 'notecards/decks.html', {'decks': decks})
+    elif request.method == 'POST':
+        page = int(request.POST.get('page_num'))
+        start = page * 50
+        end = start + 50
+        decks = Deck.objects.order_by('-dateCreated')[start:end]
+        decksJSON = serializers.serialize('json', decks)
+        return HttpResponse(decksJSON, content_type='application/json')
+
+
 def get_user_decks(request, user):
     user = User.objects.get(username=user)
     decks = Deck.objects.filter(author=user)
@@ -128,11 +113,14 @@ def create_deck(request):
             desc = form.cleaned_data['description']
             deck = Deck(author=user, title=title, description=desc)
             deck.save()
-            return HttpResponse('success')
+            for tag in form.cleaned_data['tags']:
+                deck.tags.add(tag)
+            deck.save()
+            return HttpResponseRedirect(reverse('decks'))
             # TODO: handle case where form isn't valid
     form = deckForm()
     # TODO: render new form
-    return render(request, 'create_deck.html', {'form': form})
+    return render(request, 'notecards/create_deck.html', {'form': form})
 
 
 @login_required
@@ -165,7 +153,11 @@ def clone_deck(request):
                        title=deck.title,
                        slug=deck.slug,
                        description=deck.description,
-                       numCards=deck.numCards)
+                       )
+        newDeck.save()
+        tags = deck.tags.names()
+        for tag in tags:
+            newDeck.tags.add(tag)
         newDeck.save()
         for card in deck.card_set.all():
             newCard = Card(front=card.front,
