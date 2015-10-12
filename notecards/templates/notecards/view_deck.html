@@ -1,0 +1,42 @@
+{% extends 'notecards/base.html' %}
+
+{% block body_block %}
+	{{ deckform.as_p }}
+
+	<h3>Cards</h3>
+	<div class="scrollable-window">
+		<ul>
+			{% for card in cards %}
+				<li>{{ card.front }} -- {{ card.back }}</li>
+			{% endfor %}
+		</ul>
+	</div>
+
+	<h3>Add Cards</h3>
+	<form id="cardcreate" action="#" method="POST">
+		{% csrf_token %}
+		{{ cardform.front.label_tag }}
+		{{ cardform.front }}
+		{{ cardform.back.label_tag }}
+		{{ cardform.back }}
+		<input type="submit" value="Create" />
+	</form>
+{% endblock %}
+
+{% block script_block %}
+	<script type="text/javascript">
+		$("#cardcreate").submit(function() {
+			var url = 'notecards/create_card/';
+
+			$.ajax({
+				method: 'POST',
+				url: url,
+				data: {'did': {{ deck.id }},
+						$("#cardcreate").serialize()},
+				success: function(data) {
+					
+				}
+			})
+		})
+	</script>
+{% endblock %}

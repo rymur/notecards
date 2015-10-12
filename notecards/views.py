@@ -31,10 +31,8 @@ def register(request):
 
 
 @login_required
-def check_answer(request, title_slug):
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    deck = get_object_or_404(Deck, author=user, slug=title_slug)
+def check_answer(request, deckid):
+    deck = get_object_or_404(Deck, pk=deckid)
     front = request.POST.get('front')
     userAnswer = request.POST.get('ans')
     answerCards = Card.objects.filter(deck=deck, front=front)
@@ -48,10 +46,8 @@ def check_answer(request, title_slug):
 
 
 @login_required
-def get_card(request, title_slug):
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    deck = Deck.objects.filter(author=user, slug=title_slug)
+def get_card(request, deckid):
+    deck = Deck.objects.filter(pk=deckid)
     minScore = deck.aggregate(Min('card__score'))
     minScore = minScore['card__score__min']
     maxScore = deck.aggregate(Max('card__score'))
@@ -66,19 +62,12 @@ def get_card(request, title_slug):
     return HttpResponse(card_json, content_type='application/json')
 
 
-def get_deck(request, title_slug):
-    deck = get_object_or_404(Deck, slug=title_slug)
+def get_deck(request, deckid):
+    deck = get_object_or_404(Deck, pk=id)
     cards = deck.card_set.all()
     cardsJSON = serializers.serialize('json', cards)
 
     return HttpResponse(cardsJSON, content_type='application/json')
-
-
-def get_all_decks(request):
-    decks = Deck.objects.all()
-    decksJSON = serializers.serialize('json', decks)
-
-    return HttpResponse(decksJSON, content_type='application/json')
 
 
 def get_decks(request):
@@ -95,11 +84,17 @@ def get_decks(request):
 
 
 def get_user_decks(request, user):
-    user = User.objects.get(username=user)
-    decks = Deck.objects.filter(author=user)
-    decksJSON = serializers.serialize('json', decks)
-
-    return HttpResponse(decksJSON, content_type='application/json')
+    if request.method == 'GET':
+        user = User.objects.get(username=user)
+        decks = Deck.objects.filter(author=user).order_by('-dateCreated')[:50]
+        return render(request, 'notecards/decks.html', {'decks': decks})
+    if request.method == 'POST':
+        page = int(request.POST.get('page_num'))
+        start = page * 50
+        end = start + 50
+        decks = Deck.objects.filter(author=user).order_by('-dateCreated')[start:end]
+        decksJSON = serializers.serialize('json', decks)
+        return HttpResponse(decksJSON, content_type='application/json')
 
 
 @login_required
@@ -124,30 +119,30 @@ def create_deck(request):
 
 
 @login_required
-def create_card(request, deck_slug):
+def create_card(request):
     if request.method == 'POST':
+        deckid = request.POST.get('did')
         userID = request.user.id
         user = User.objects.get(pk=userID)
-        deck = Deck.objects.get(slug=deck_slug, author=user)
+        # redundant filter to make sure user owns the deck
+        deck = get_object_or_404(Deck, pk=deckid, author=user)
         form = cardForm(request.POST)
         if form.is_valid():
             front = form.cleaned_data['front']
             back = form.cleaned_data['back']
             card = Card(front=front, back=back, deck=deck)
             card.save()
-            return HttpResponse('success')
+            return HttpResponse(status=201)
         else:
-            return HttpResponse('Error: You do not own this deck')
-
-    form = cardForm()
+            return render(request, 'notecards/build.html', {'form': form})
 
 
 @login_required
 def clone_deck(request):
-    deckName = request.POST.get('deck')
+    deckid = request.POST.get('deckid')
     userID = request.user.id
     user = User.objects.get(pk=userID)
-    deck = Deck.objects.get(title=deckName)
+    deck = Deck.objects.get(pk=deckid)
     if deck.author != user:
         newDeck = Deck(author=user,
                        title=deck.title,
@@ -169,3 +164,18 @@ def clone_deck(request):
         return HttpResponse(status=201)
     else:
         return HttpResponse('Error: You already own this deck')
+
+
+def view_deck(request):
+    deckid = request.GET.get('did')
+    deck = Deck.objects.get(pk=deckid)
+    deckform = deckForm(instance=deck)
+    cardform = cardForm()
+    cards = Deck.card_set.all()
+
+    context_dict = {'deckform': deckform,
+                    'cardform': cardform,
+                    'cards': cards,
+                    'deck': deck}
+
+    return render(request, 'notecards/view_deck.html', context_dict)

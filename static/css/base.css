@@ -2,6 +2,11 @@
     padding-right: 15px;
 }
 
+.scrollable-window {
+	height: 250px;
+	overflow: auto;
+}
+
 label {
     vertical-align: top;
 }
