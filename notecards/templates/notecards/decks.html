@@ -12,19 +12,31 @@
     </thead>
     <tbody>
         {% for deck in decks %}
-            <a href="#">
-                <tr>
+                <tr class="clickable-row" data-href="{% url 'view_deck' %}?did={{ deck.id }}">
                     <td>{{ deck.title }}</td>
                     <td>{{ deck.author }}</td>
                     <td>{{ deck.numCards }}</td>
                     <td>
                         {% for tag in deck.tags.all %}
-                            {{ tag.name }},
+                            {% if forloop.counter == deck.tags.all|length %}
+                                {{ tag.name }}
+                            {% else %}
+                                {{ tag.name }},
+                            {% endif %}
                         {% endfor %}
                     </td>
                 </tr>
-            </a>
         {% endfor %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block script_block %}
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $(".clickable-row").click(function() {
+                window.document.location = $(this).data("href");
+            });
+        });
+    </script>
 {% endblock %}
