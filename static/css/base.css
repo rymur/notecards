@@ -10,3 +10,7 @@
 label {
     vertical-align: top;
 }
+
+select {
+    width: 30em;
+}
