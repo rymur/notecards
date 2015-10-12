@@ -4,13 +4,14 @@
 	{{ deckform.as_p }}
 
 	<h3>Cards</h3>
-	<div class="scrollable-window">
-		<ul>
-			{% for card in cards %}
-				<li>{{ card.front }} -- {{ card.back }}</li>
-			{% endfor %}
-		</ul>
-	</div>
+	<select size="10" name="cards" id="cards">
+		{% for card in cards %}
+			<option value={{ card.pk }}>{{ card.front }} -- {{ card.back }}</option>
+		{% endfor %}
+	</select>
+	<br />
+	<button type="button" class="btn btn-danger" id="delbtn">Delete</button>
+	<button type="button" class="btn btn-primary" id="editbtn">Edit</button>
 
 	<h3>Add Cards</h3>
 	<form id="cardcreate" action="#" method="POST">
@@ -25,18 +26,64 @@
 
 {% block script_block %}
 	<script type="text/javascript">
-		$("#cardcreate").submit(function() {
-			var url = 'notecards/create_card/';
+		function getCookie(name) {
+		    var cookieValue = null;
+		    if (document.cookie && document.cookie != '') {
+		        var cookies = document.cookie.split(';');
+		        for (var i = 0; i < cookies.length; i++) {
+		            var cookie = jQuery.trim(cookies[i]);
+		            // Does this cookie string begin with the name we want?
+		            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+		                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+		                break;
+		            }
+		        }
+		    }
+		    return cookieValue;
+		}
+
+		var csrftoken = getCookie('csrftoken');
+		function csrfSafeMethod(method) {
+		    // these HTTP methods do not require CSRF protection
+		    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+		}
+
+		$.ajaxSetup({
+		    beforeSend: function(xhr, settings) {
+		        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+		        }
+		    }
+		});
+
+		$("#cardcreate").submit(function(event) {
+			event.preventDefault();
+
+			var url = '/notecards/create_card/{{ deck.id }}/';
+			var formData = $('#cardcreate').serialize();
 
 			$.ajax({
 				method: 'POST',
 				url: url,
-				data: {'did': {{ deck.id }},
-						$("#cardcreate").serialize()},
+				data: formData,
 				success: function(data) {
-					
+					$('#cards').append(data);
+					$('#id_front').val('');
+					$('#id_back').val('');
+					$('#id_front').focus();
 				}
-			})
-		})
+			});
+		});
+
+		$("#delbtn").click(function() {
+			var delCard = $("#cards option:selected").val();
+			$.ajax({
+				method: 'DELETE',
+				url: '/notecards/edit_card/' + delCard + '/',
+				success: function(data) {
+					$("#cards option[value='" + delCard +"']").remove();
+				}
+			});
+		});
 	</script>
 {% endblock %}

@@ -119,9 +119,8 @@ def create_deck(request):
 
 
 @login_required
-def create_card(request):
+def create_card(request, deckid):
     if request.method == 'POST':
-        deckid = request.POST.get('did')
         userID = request.user.id
         user = User.objects.get(pk=userID)
         # redundant filter to make sure user owns the deck
@@ -132,9 +131,35 @@ def create_card(request):
             back = form.cleaned_data['back']
             card = Card(front=front, back=back, deck=deck)
             card.save()
-            return HttpResponse(status=201)
+            content = '<option>{0} -- {1}</option>'.format(front, back)
+            return HttpResponse(status=201,
+                                content=content,
+                                content_type='text/html')
         else:
             return render(request, 'notecards/build.html', {'form': form})
+
+
+@login_required
+def edit_card(request, cardid):
+    card = Card.objects.get(pk=cardid)
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    if card.deck.author == user:
+        if request.method == 'POST':
+            form = cardForm(request.POST)
+            if form.is_valid():
+                card.front = form.cleaned_data['front']
+                card.back = form.cleaned_data['back']
+                card.save()
+                content = '<option>{0} -- {1}</option>'.format(
+                    card.front,
+                    card.back)
+                return HttpResponse(status=200,
+                                    content=content,
+                                    content_type='text/html')
+        elif request.method == 'DELETE':
+            card.delete()
+            return HttpResponse(status=200)
 
 
 @login_required
@@ -171,7 +196,7 @@ def view_deck(request):
     deck = Deck.objects.get(pk=deckid)
     deckform = deckForm(instance=deck)
     cardform = cardForm()
-    cards = Deck.card_set.all()
+    cards = deck.card_set.all()
 
     context_dict = {'deckform': deckform,
                     'cardform': cardform,
