@@ -13,8 +13,6 @@ class Deck(models.Model):
     tags = TaggableManager(blank=True)
     dateCreated = models.DateField(auto_now_add=True)
     dateModified = models.DateTimeField(auto_now=True)
-    # This one may not be needed. Further research required.
-    # parent = models.ForeignKey('self', on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)
