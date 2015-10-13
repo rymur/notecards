@@ -11,6 +11,7 @@ from notecards.models import Deck, Card
 from notecards.forms import deckForm, cardForm
 
 import random
+import json
 
 
 def index(request):
@@ -33,16 +34,22 @@ def register(request):
 @login_required
 def check_answer(request, deckid):
     deck = get_object_or_404(Deck, pk=deckid)
-    front = request.POST.get('front')
+    cardid = request.POST.get('front')
+    card = Card.objects.get(pk=cardid)
+    front = card.front
+    retResp = {'answer': card.back, 'result': 'wrong'}
     userAnswer = request.POST.get('ans')
     answerCards = Card.objects.filter(deck=deck, front=front)
     for ans in answerCards:
         if ans.back == userAnswer:
             ans.score += 1
             ans.save()
-            return HttpResponse('correct')
-    answerCards.update(score=F('score') - 1)
-    return HttpResponse('wrong')
+            retResp['result'] = 'correct'
+    if retResp['result'] == 'wrong':
+        answerCards.update(score=F('score') - 1)
+    jsonResp = json.dumps(retResp)
+
+    return HttpResponse(jsonResp, content_type='application/json')
 
 
 @login_required
@@ -58,8 +65,9 @@ def get_card(request, deckid):
     rindex = random.randint(0, len(cards) - 1)
     card = cards[rindex]
 
-    card_json = serializers.serialize('json', [card])
-    return HttpResponse(card_json, content_type='application/json')
+    context_dict = {'card': card, 'deck': deck}
+
+    return render(request, 'notecards/drill.html', context_dict)
 
 
 def get_deck(request, deckid):
