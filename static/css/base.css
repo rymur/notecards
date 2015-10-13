@@ -16,6 +16,7 @@
 
 #qa_div {
     border: 1px solid black;
+    border-radius: 3em;
     text-align: center;
     margin-top: 5em;
     height: 25em;
@@ -23,6 +24,10 @@
 
 #contBTN {
     margin: 2em;
+}
+
+#welcome {
+    text-align: center;
 }
 
 label {
