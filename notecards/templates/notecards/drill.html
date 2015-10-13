@@ -1,0 +1,45 @@
+{% extends 'notecards/base.html' %}
+
+{% block body_block %}
+    <div class="col-sm-2"></div>
+    <div id="qa_div" class="col-sm-8">
+        <h1 id="question">{{ card.front }}</h1>
+        <br />
+        <form id="ans_form" method="GET" action="#">
+            <input id="user_answer" type="text" name="answer" maxlength="512">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+    <div class="col-sm-2"></div>
+{% endblock %}
+
+{% block script_block %}
+    <script type="text/javascript">
+    $('#ans_form').submit(function(event) {
+        event.preventDefault();
+
+        $.ajax({
+            method: 'POST',
+            url: '/notecards/check_answer/' + {{ deck.id }} + '/',
+            dataType: 'json',
+            data: {front: {{ card.id }}, ans: $('#user_answer').val()},
+            success: function(data) {
+                if (data['result'] === 'correct') {
+                    $('#qa_div').addClass('correct');
+                }
+                else {
+                    $('#qa_div').addClass('wrong');
+                    var answerHTML = '<h2 class="answer">' + data['answer'] + '</h2>';
+                    $('#qa_div').append(answerHTML);
+                }
+                var btnHTML = '<button id="contBTN" class="btn btn-primary">Continue</button>';
+                $('#qa_div').append(btnHTML);
+            }
+        });
+    });
+
+    $(document).on('click', '#contBTN', function() {
+        window.location.replace('/notecards/get_card/' + {{ deck.id }} + '/');
+    });
+    </script>
+{% endblock %}

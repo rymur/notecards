@@ -1,6 +1,10 @@
 {% extends 'notecards/base.html' %}
 
 {% block body_block %}
+
+	<a href="/notecards/get_card/{{ deck.id }}/">Drill Cards</a>
+	<br />
+
 	{{ deckform.as_p }}
 
 	<h3>Cards</h3>
@@ -10,51 +14,24 @@
 		{% endfor %}
 	</select>
 	<br />
-	<button type="button" class="btn btn-danger" id="delbtn">Delete</button>
-	<button type="button" class="btn btn-primary" id="editbtn">Edit</button>
+	{% if user == deck.author %}
+		<button type="button" class="btn btn-danger" id="delbtn">Delete</button>
+		<button type="button" class="btn btn-primary" id="editbtn">Edit</button>
 
-	<h3>Add Cards</h3>
-	<form id="cardcreate" action="#" method="POST">
-		{% csrf_token %}
-		{{ cardform.front.label_tag }}
-		{{ cardform.front }}
-		{{ cardform.back.label_tag }}
-		{{ cardform.back }}
-		<input type="submit" value="Create" />
-	</form>
+		<h3>Add Cards</h3>
+		<form id="cardcreate" action="#" method="POST">
+			{% csrf_token %}
+			{{ cardform.front.label_tag }}
+			{{ cardform.front }}
+			{{ cardform.back.label_tag }}
+			{{ cardform.back }}
+			<input type="submit" value="Create" />
+		</form>
+	{% endif %}
 {% endblock %}
 
 {% block script_block %}
 	<script type="text/javascript">
-		function getCookie(name) {
-		    var cookieValue = null;
-		    if (document.cookie && document.cookie != '') {
-		        var cookies = document.cookie.split(';');
-		        for (var i = 0; i < cookies.length; i++) {
-		            var cookie = jQuery.trim(cookies[i]);
-		            // Does this cookie string begin with the name we want?
-		            if (cookie.substring(0, name.length + 1) == (name + '=')) {
-		                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-		                break;
-		            }
-		        }
-		    }
-		    return cookieValue;
-		}
-
-		var csrftoken = getCookie('csrftoken');
-		function csrfSafeMethod(method) {
-		    // these HTTP methods do not require CSRF protection
-		    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-		}
-
-		$.ajaxSetup({
-		    beforeSend: function(xhr, settings) {
-		        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-		        }
-		    }
-		});
 
 		$("#cardcreate").submit(function(event) {
 			event.preventDefault();
