@@ -172,7 +172,7 @@ def edit_card(request, cardid):
 
 @login_required
 def clone_deck(request):
-    deckid = request.POST.get('deckid')
+    deckid = request.GET.get('did')
     userID = request.user.id
     user = User.objects.get(pk=userID)
     deck = Deck.objects.get(pk=deckid)
@@ -193,8 +193,8 @@ def clone_deck(request):
                            deck=newDeck,
                            score=0)
             newCard.save()
-        # return HTTP 201 - "created"
-        return HttpResponse(status=201)
+        url = reverse('view_deck') + '?did=' + str(newDeck.id)
+        return HttpResponseRedirect(url)
     else:
         return HttpResponse('Error: You already own this deck')
 
