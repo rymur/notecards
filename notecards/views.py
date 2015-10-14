@@ -54,20 +54,26 @@ def check_answer(request, deckid):
 
 @login_required
 def get_card(request, deckid):
-    deck = Deck.objects.filter(pk=deckid)
-    minScore = deck.aggregate(Min('card__score'))
-    minScore = minScore['card__score__min']
-    maxScore = deck.aggregate(Max('card__score'))
-    maxScore = maxScore['card__score__max']
-    rscore = random.randint(minScore, maxScore)
-    deck = deck[0]
-    cards = deck.card_set.filter(score__lte=rscore)
-    rindex = random.randint(0, len(cards) - 1)
-    card = cards[rindex]
+    userid = request.user.id
+    user = User.objects.get(pk=userid)
+    deck = Deck.objects.filter(pk=deckid, author=user)
+    if deck.count() > 0:
+        minScore = deck.aggregate(Min('card__score'))
+        minScore = minScore['card__score__min']
+        maxScore = deck.aggregate(Max('card__score'))
+        maxScore = maxScore['card__score__max']
+        rscore = random.randint(minScore, maxScore)
+        deck = deck[0]
+        cards = deck.card_set.filter(score__lte=rscore)
+        rindex = random.randint(0, len(cards) - 1)
+        card = cards[rindex]
 
-    context_dict = {'card': card, 'deck': deck}
+        context_dict = {'card': card, 'deck': deck}
 
-    return render(request, 'notecards/drill.html', context_dict)
+        return render(request, 'notecards/drill.html', context_dict)
+    else:
+        return HttpResponse('You do not have access to this deck',
+                            status=404)
 
 
 def get_deck(request, deckid):
@@ -212,3 +218,8 @@ def view_deck(request):
                     'deck': deck}
 
     return render(request, 'notecards/view_deck.html', context_dict)
+
+
+@login_required
+def profile(request):
+    return render(request, 'registration/profile.html', {})

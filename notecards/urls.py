@@ -4,6 +4,7 @@ from notecards import views
 
 urlpatterns = patterns('',
                        url(r'^logout/$', auth_views.logout_then_login),
+                       url(r'^password_change/$', auth_views.password_change, {'template_name': 'registration/password_change.html'}),
                        url(r'^', include('django.contrib.auth.urls')),
                        url(r'^$', views.index, name='index'),
                        url(r'^get_card/(?P<deckid>[0-9]+)/$', views.get_card, name='get_card'),
@@ -17,4 +18,5 @@ urlpatterns = patterns('',
                        url(r'^decks/(?P<user>[\w\-]+)/$', views.get_user_decks, name='get_user_decks'),
                        url(r'^clone_deck/$', views.clone_deck, name='clone_deck'),
                        url(r'^register/$', views.register, name='register'),
+                       url(r'^profile/$', views.profile, name='profile'),
                        )
