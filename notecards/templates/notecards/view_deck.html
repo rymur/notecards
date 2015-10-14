@@ -1,9 +1,14 @@
 {% extends 'notecards/base.html' %}
 
 {% block body_block %}
-
-	<a href="/notecards/get_card/{{ deck.id }}/">Drill Cards</a>
-	<br />
+	{% if user == deck.author %}
+		<a href="/notecards/get_card/{{ deck.id }}/">
+			<button class="btn btn-success">
+				Drill Cards
+			</button>
+		</a>
+		<br />
+	{% endif %}
 
 	{{ deckform.as_p }}
 
@@ -25,6 +30,7 @@
 			{{ cardform.front }}
 			{{ cardform.back.label_tag }}
 			{{ cardform.back }}
+			<br />
 			<input type="submit" value="Create" />
 		</form>
 	{% elif user.is_authenticated %}
