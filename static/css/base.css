@@ -75,6 +75,10 @@
     text-align: center;
 }
 
+#search {
+    border-radius: 10px;
+}
+
 label {
     vertical-align: top;
     display: inline-block;
