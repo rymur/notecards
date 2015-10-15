@@ -160,7 +160,9 @@ def edit_card(request, cardid):
     user = User.objects.get(pk=userID)
     if card.deck.author == user:
         if request.method == 'POST':
-            form = cardForm(request.POST)
+            front = request.POST.get('editfront')
+            back = request.POST.get('editback')
+            form = cardForm({'front': front, 'back': back})
             if form.is_valid():
                 card.front = form.cleaned_data['front']
                 card.back = form.cleaned_data['back']

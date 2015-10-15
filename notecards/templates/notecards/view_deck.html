@@ -24,7 +24,18 @@
 	{% if user == deck.author %}
 		<button type="button" class="btn btn-danger" id="delbtn">Delete</button>
 		<button type="button" class="btn btn-primary" id="editbtn">Edit</button>
-
+		<br />
+		<div id="editdiv" style="display: none;">
+			<form id="editform" action="#" method="POST">
+				{% csrf_token %}
+				<label for="editfront">Front:</label>
+				<input name="editfront" id="editfront">
+				<label for="editback">Back:</label>
+				<input name="editback" id="editback">
+				<br />
+				<input type="submit" value="Change" />
+			</form>
+		</div>
 		<h3>Add Cards</h3>
 		<form id="cardcreate" action="#" method="POST">
 			{% csrf_token %}
@@ -73,6 +84,29 @@
 				url: '/notecards/edit_card/' + delCard + '/',
 				success: function(data) {
 					$("#cards option[value='" + delCard +"']").remove();
+				}
+			});
+		});
+
+		$("#editbtn").click(function() {
+			$("#editdiv").toggle();
+			var text = $("#cards option:selected").text();
+			var sides = text.split(' -- ');
+			$("#editfront").val(sides[0]);
+			$("#editback").val(sides[1]);
+		});
+
+		$("#editform").submit(function(event) {
+			event.preventDefault();
+			var editCard = $("#cards option:selected").val();
+			var formData = $("#editform").serialize();
+			$.ajax({
+				method: 'POST',
+				data: formData,
+				url: '/notecards/edit_card/' + editCard + '/',
+				success: function(data) {
+					$("#cards option[value='" + editCard + "']").replaceWith(data);
+					$("#editdiv").hide();
 				}
 			});
 		});
