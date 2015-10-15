@@ -2,11 +2,13 @@
 
 {% block body_block %}
 	{% if user == deck.author %}
+		<div class="col-md-12 text-center">
 		<a href="/notecards/get_card/{{ deck.id }}/">
-			<button class="btn btn-success">
+			<button class="btn btn-success btn-wide">
 				Drill Cards
 			</button>
 		</a>
+		</div>
 		<br />
 	{% endif %}
 

@@ -4,8 +4,6 @@
     <h1>Create a deck</h1>
     <form action="{% url 'create_deck' %}" method="post">
         {% csrf_token %}
-        {# note: form-group won't do anything without being able 
-                 to control HTML element classes #}
         <div class="form-group">
             {{ form.title.label_tag }}
             {{ form.title }}
