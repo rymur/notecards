@@ -14,12 +14,57 @@
     box-shadow: 0px 0px 17px 8px rgba(161,5,10,1);
 }
 
+.navbar {
+    background-color: #3385FF;
+    border: 0px;
+    margin: 0px;
+}
+
+.navbar-default .navbar-nav li a {
+    color: #EEE;
+    font-size: 1.2em;
+}
+
+.navbar-default .navbar-nav li a:hover {
+    color: #FFF;
+    background-color: #3E79D1;
+}
+
+.navbar-default .navbar-nav li a:active {
+    background-color: #296ACC;
+    color: #FFF;
+}
+
+.site-masthead {
+    background-color: #3385FF;
+    margin-bottom: 1em;
+}
+
+.navbar-default .navbar-nav .dropdown-menu li a {
+    color: black;
+    font-size: 1em;
+}
+
+.navbar-default .navbar-nav > .open > a:focus {
+    background-color: #296ACC;
+    color: #FFF;
+}
+
+.btn-wide {
+    width: 50%;
+}
+
+.bodyblock {
+    min-height: 100%;
+}
+
 #qa_div {
     border: 1px solid black;
     border-radius: 3em;
     text-align: center;
     margin-top: 5em;
     height: 25em;
+    background-color: white;
 }
 
 #contBTN {
@@ -38,4 +83,23 @@ label {
 
 select {
     width: 30em;
+}
+
+body {
+    background-color: #F0F0F0;
+    height: 100%;
+}
+
+html {
+    height: 100%;
+}
+
+footer {
+    margin-top: 2em;
+    height: 5em;
+    background-color: #3385FF;
+    bottom: 0px;
+    position: relative;
+    clear: both;
+    width: 100%;
 }
