@@ -13,7 +13,7 @@
     background-image: url('../images/btn_google_signin_dark_pressed_web.png');
 }
 
-#form_div {
+.form_div {
     text-align: center;
 }
 
@@ -21,8 +21,13 @@
     margin: 0.5em;
 }
 
-#signin {
+.centerdiv {
     border: 0.5em gray solid;
+    padding: 1em;
+}
+
+.signup label {
+    width: 40%;
 }
 
 
