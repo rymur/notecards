@@ -1,0 +1,58 @@
+{% extends "account/base.html" %}
+{% load staticfiles %}
+
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block body_block %}
+
+<div class="col-md-4">
+</div>
+<div class="col-md-4" id="signin">
+<h1>{% trans "Sign In" %}</h1>
+
+{% get_providers as socialaccount_providers %}
+
+{% if socialaccount_providers %}
+<p>{% blocktrans with site.name as site_name %}Please sign in with one
+of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
+for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
+
+
+
+<a href="{% provider_login_url 'google' process='login' %}">
+  <div id="google_login"></div>
+</a>
+
+<p style="text-align: center;">{% trans 'or' %}</p>
+
+
+{% include "socialaccount/snippets/login_extra.html" %}
+
+{% else %}
+<p>{% blocktrans %}If you have not created an account yet, then please
+<a href="{{ signup_url }}">sign up</a> first.{% endblocktrans %}</p>
+{% endif %}
+
+<div id="form_div">
+<form class="login" method="POST" action="{% url 'account_login' %}">
+          {% csrf_token %}
+            {{ form.non_field_errors }}
+            <input id="id_login" class="login-input" maxlength="30" name="login" placeholder="Username" type="text" />{{ form.login.errors }}<br>
+            <input id="id_password"  class="login-input" name="password" placeholder="Password" type="password" />{{ form.password.errors }}<br>
+            <div class="remember-forgot-section">
+                <input id="id_remember" name="remember" type="checkbox" />
+                <label for="id_remember">Remember Me</label>
+                <br />
+                <a class="forgot" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+            </div>
+          {% if redirect_field_value %}
+          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+          {% endif %}
+
+          <button class="btn btn-primary" type="submit" id="signinbtn">{% trans "Sign In" %}</button>
+        </form>
+</div>
+</div>
+{% endblock %}
+<div class="col-md-4"></div>

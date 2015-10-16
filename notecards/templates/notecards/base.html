@@ -5,10 +5,13 @@
 <html>
 <head>
     <title>
+        {% block title_block %}
         Flashcards
+        {% endblock %}
     </title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block head_block %}{% endblock %}
 </head>
 <body>
     <div class="site-masthead">
@@ -30,11 +33,16 @@
                             <li><a href="{% url 'decks' %}{{ user.get_username }}">Your Decks</a></li>
                             <li><a href="{% url 'create_deck' %}">Create a Deck</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="{% url 'logout' %}">Logout</a></li>
+                            <li>
+                                <form method="POST" action="{% url 'account_logout' %}">
+                                    {% csrf_token %}
+                                    <input type="submit" value="Logout">
+                                </form>
+                            </li>
                         </ul>
                     </li>
                 {% else %}
-                    <li><a class="nav-item" href="{% url 'login' %}">Login</a></li>
+                    <li><a class="nav-item" href="{% url 'account_login' %}">Login</a></li>
                     <li><a class="nav-item" href="{% url 'register' %}">Register</a></li>
                 {% endif %}
                 </ul>
