@@ -1,0 +1,39 @@
+#google_login {
+    background-image: url('../images/btn_google_signin_dark_normal_web.png');
+    width: 193px;
+    height: 48px;
+    margin: auto;
+}
+
+#google_login:hover {
+    background-image: url('../images/btn_google_signin_dark_focus_web.png');
+}
+
+#google_login:active {
+    background-image: url('../images/btn_google_signin_dark_pressed_web.png');
+}
+
+#form_div {
+    text-align: center;
+}
+
+#signinbtn {
+    margin: 0.5em;
+}
+
+#signin {
+    border: 0.5em gray solid;
+}
+
+
+label[for=id_remember] {
+    width: auto;
+}
+
+h1 {
+    text-align: center;
+}
+
+input {
+    margin: 0.5em;
+}

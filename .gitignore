@@ -1,3 +1,4 @@
 *.pyc
 *KEY_SECRET.py
 env/
+db.sqlite3

@@ -19,4 +19,7 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^notecards/', include('notecards.urls')),
+    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',
+     {'next_page': '/notecards/'}),
+    url(r'^accounts/', include('allauth.urls')),
 ]
