@@ -16,4 +16,5 @@ urlpatterns = patterns('',
                        url(r'^clone_deck/$', views.clone_deck, name='clone_deck'),
                        url(r'^register/$', views.register, name='register'),
                        url(r'^profile/$', views.profile, name='profile'),
+                       url(r'^delete/$', views.delete_deck, name='delete_deck'),
                        )
