@@ -225,3 +225,16 @@ def view_deck(request):
 @login_required
 def profile(request):
     return render(request, 'registration/profile.html', {})
+
+
+@login_required
+def delete_deck(request):
+    if request.method == 'POST':
+        deckID = request.POST.get('did')
+        userID = request.user.id
+        user = User.objects.get(pk=userID)
+        deck = Deck.objects.get(pk=deckID)
+        if deck.author == user:
+            deck.delete()
+            return HttpResponseRedirect(reverse('get_user_decks', 
+                                        kwargs={'user': user.username}))

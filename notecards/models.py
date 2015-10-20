@@ -13,6 +13,10 @@ class Deck(models.Model):
     tags = TaggableManager(blank=True)
     dateCreated = models.DateField(auto_now_add=True)
     dateModified = models.DateTimeField(auto_now=True)
+    # parent = models.ForeignKey("self", on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('author', 'title')
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)
@@ -26,10 +30,27 @@ class Deck(models.Model):
         return self.title
 
 
+# class SubDeck(models.Model):
+#     '''This implements subdecks for sorting cards according
+#        to how well the user knows them'''
+#     EASY = 'e'
+#     MEDIUM = 'm'
+#     HARD = 'h'
+#     LEVEL_CHOICES = (
+#         (EASY, 'easy'),
+#         (MEDIUM, 'medium'),
+#         (HARD, 'hard')
+#         )
+
+#     deck = models.ForeignKey(Deck)
+#     level = models.CharField(max_length=2, choices=LEVEL_CHOICES)
+
+
 class Card(models.Model):
     front = models.CharField(max_length=512)
     back = models.CharField(max_length=512)
     deck = models.ForeignKey(Deck)
+    # subdeck = models.ForeignKey(SubDeck)
     score = models.IntegerField(default=0)
 
     def __repr__(self):
