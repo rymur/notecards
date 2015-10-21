@@ -30,22 +30,6 @@ class Deck(models.Model):
         return self.title
 
 
-# class SubDeck(models.Model):
-#     '''This implements subdecks for sorting cards according
-#        to how well the user knows them'''
-#     EASY = 'e'
-#     MEDIUM = 'm'
-#     HARD = 'h'
-#     LEVEL_CHOICES = (
-#         (EASY, 'easy'),
-#         (MEDIUM, 'medium'),
-#         (HARD, 'hard')
-#         )
-
-#     deck = models.ForeignKey(Deck)
-#     level = models.CharField(max_length=2, choices=LEVEL_CHOICES)
-
-
 class Card(models.Model):
     front = models.CharField(max_length=512)
     back = models.CharField(max_length=512)

@@ -58,6 +58,26 @@
     min-height: 100%;
 }
 
+.skill1 {
+    background-color: #A41313;
+}
+
+.skill2 {
+    background-color: #C56D15;
+}
+
+.skill3 {
+    background-color: #BCBC00;
+}
+
+.skill4 {
+    background-color: #00BC00;
+}
+
+.skill5 {
+    background-color: #0000BC;
+}
+
 #qa_div {
     border: 1px solid black;
     border-radius: 3em;
@@ -65,6 +85,11 @@
     margin-top: 5em;
     height: 25em;
     background-color: white;
+}
+
+#timer {
+    float: left;
+    display: inline-block;
 }
 
 #contBTN {
