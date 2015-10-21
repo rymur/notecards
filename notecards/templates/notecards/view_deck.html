@@ -17,7 +17,11 @@
 	<h3>Cards</h3>
 	<select size="10" name="cards" id="cards">
 		{% for card in cards %}
+			{% if user == deck.author %}
 			<option class="skill{{ card.score }}" value={{ card.pk }}>{{ card.front }} -- {{ card.back }}</option>
+			{% else %}
+			<option value={{ card.pk }}>{{ card.front }} -- {{ card.back }}</option>
+			{% endif %}
 		{% endfor %}
 	</select>
 	<br />
