@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.template.defaultfilters import slugify
+from django.core.exceptions import ValidationError
 
 from taggit.managers import TaggableManager
 
@@ -18,7 +19,12 @@ class Deck(models.Model):
     class Meta:
         unique_together = ('author', 'title')
 
+    def clean(self):
+        if Deck.objects.filter(author=self.author).count() >= 50:
+            raise ValidationError('User cannot have more than 50 decks')
+
     def save(self, *args, **kwargs):
+        self.clean()
         self.slug = slugify(self.title)
         super(Deck, self).save(*args, **kwargs)
 
@@ -34,7 +40,6 @@ class Card(models.Model):
     front = models.CharField(max_length=512)
     back = models.CharField(max_length=512)
     deck = models.ForeignKey(Deck)
-    # subdeck = models.ForeignKey(SubDeck)
     score = models.IntegerField(default=0)
 
     def __repr__(self):
