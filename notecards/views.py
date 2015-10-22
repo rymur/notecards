@@ -69,9 +69,30 @@ def get_card(request, deckid):
         rindex = random.randint(0, len(cards) - 1)
         card = cards[rindex]
 
-        context_dict = {'card': card, 'deck': deck}
+        context_dict = {'card': card, 'deck': deck, 'mode': 'get_card/'}
 
         return render(request, 'notecards/drill.html', context_dict)
+    else:
+        return HttpResponse('You do not have access to this deck',
+                            status=404)
+
+
+@login_required
+def get_weak_card(request, deckid):
+    userid = request.user.id
+    user = User.objects.get(pk=userid)
+    deck = Deck.objects.get(pk=deckid, author=user)
+    if deck:
+        cards = deck.card_set.filter(score__lte=3)
+        if cards.count() > 0:
+            rindex = random.randint(0, len(cards) - 1)
+            card = cards[rindex]
+
+            context_dict = {'card': card, 'deck': deck, 'mode': 'gwc/'}
+
+            return render(request, 'notecards/drill.html', context_dict)
+        else:
+            return HttpResponse(status=404)
     else:
         return HttpResponse('You do not have access to this deck',
                             status=404)
@@ -230,12 +251,20 @@ def profile(request):
 
 @login_required
 def delete_deck(request):
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
     if request.method == 'POST':
         deckID = request.POST.get('did')
-        userID = request.user.id
-        user = User.objects.get(pk=userID)
         deck = Deck.objects.get(pk=deckID)
         if deck.author == user:
             deck.delete()
             return HttpResponseRedirect(reverse('get_user_decks', 
                                         kwargs={'user': user.username}))
+    if request.method == 'GET':
+        deckID = request.GET.get('did')
+        deck = Deck.objects.get(pk=deckID)
+        if deck.author == user:
+            context_dict = {'deck': deck}
+            return render(request,
+                          'notecards/delete_confirm.html',
+                          context_dict)

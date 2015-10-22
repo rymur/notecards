@@ -1,0 +1,17 @@
+{% extends 'notecards/base.html' %}
+
+{% block body_block %}
+    <h1 style="text-align: center;">Are you sure you want to delete {{ deck.title }}?</h1>
+    <div class="row">
+        <div class="col-sm-3 col-sm-offset-4">
+            <form method="POST" action="/notecards/delete/">
+                {% csrf_token %}
+                <input type="hidden" name="did" value="{{ deck.id }}">
+                <input type="submit" value="Yes, I'm sure" class="btn btn-danger btn-lg">
+            </form> 
+        </div>
+        <div class="col-sm-3">
+            <a href="{% url 'view_deck' %}?did={{ deck.id }}"><button class="btn btn-primary btn-lg">Cancel</button></a>
+        </div>
+    </div>
+{% endblock %}

@@ -52,7 +52,7 @@
     });
 
     $(document).on('click', '#contBTN', function() {
-        window.location.replace('/notecards/get_card/' + {{ deck.id }} + '/');
+        window.location.replace('/notecards/{{ mode }}' + {{ deck.id }} + '/');
     });
 
     var countdown = setTimeout(submitAnswer, 5000);

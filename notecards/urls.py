@@ -5,6 +5,7 @@ from notecards import views
 urlpatterns = patterns('',
                        url(r'^$', views.index, name='index'),
                        url(r'^get_card/(?P<deckid>[0-9]+)/$', views.get_card, name='get_card'),
+                       url(r'^gwc/(?P<deckid>[0-9]+)/$', views.get_weak_card, name='get_weak_card'),
                        url(r'^get_deck/(?P<deckid>[0-9]+)/$', views.get_deck, name='get_deck'),
                        url(r'^check_answer/(?P<deckid>[0-9]+)/$', views.check_answer, name='check_answer'),
                        url(r'^create_deck/$', views.create_deck, name='create_deck'),
