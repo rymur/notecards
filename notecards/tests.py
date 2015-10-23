@@ -47,9 +47,9 @@ class TestNotecardViews(TestCase):
         # tests that no user can create more than 50 decks
         auser = User.objects.get(username='auser')
         buser = User.objects.get(username='buser')
-        for i in range(0, 50):
+        for i in range(0, 100):
             DeckFactory(author=auser)
-        self.assertEqual(50, Deck.objects.filter(author=auser).count())
+        self.assertEqual(100, Deck.objects.filter(author=auser).count())
         with self.assertRaises(ValidationError):
             DeckFactory(author=auser)
         try:
@@ -58,178 +58,223 @@ class TestNotecardViews(TestCase):
             self.fail("ValidationError raised on user"
                       "with less than 50 decks")
 
-    # def test_deck_model_numCards(self):
-    #     deck = DeckFactory()
-    #     for i in range(0, 10):
-    #         CardFactory(deck=deck)
-    #     self.assertEqual(10, deck.numCards)
+    def test_deck_model_numCards(self):
+        deck = DeckFactory()
+        for i in range(0, 10):
+            CardFactory(deck=deck)
+        self.assertEqual(10, deck.numCards)
 
-    # def test_get_card(self):
-    #     a = self.client.login(username='auser', password='apass')
-    #     self.assertTrue(a)
-    #     user = User.objects.get(username='auser')
-    #     deck = DeckFactory.create(title='test deck', author=user)
-    #     CardFactory.create_batch(10, deck=deck)
-    #     resp = self.client.get('/notecards/get_card/test-deck', follow=True)
+    def test_add_score_to_card(self):
+        card = CardFactory(score=0)
+        card.score += 1
+        card.save()
+        self.assertEqual(1, card.score)
 
-    #     self.assertContains(resp, 'score', 1)
-    #     self.assertContains(resp, 'front', 1)
-    #     self.assertContains(resp, 'back', 1)
+    def test_get_card(self):
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        user = User.objects.get(username='auser')
+        deck = DeckFactory.create(title='test deck', author=user)
+        CardFactory.create_batch(10, deck=deck)
+        resp = self.client.get(reverse('get_card',
+                               kwargs={'deckid': deck.id}))
 
-    # def test_get_deck(self):
-    #     deck = DeckFactory(title='test deck')
-    #     for i in range(0, 10):
-    #         CardFactory(deck=deck)
+        self.assertEquals(resp.status_code, 200)
+        self.assertEquals(resp.context['deck'], deck)
 
-    #     resp = self.client.get('/notecards/get_deck/test-deck', follow=True)
+        # test that buser can't use get_card for auser's cards
+        self.client.logout()
+        b = self.client.login(username='buser', password='bpass')
+        self.assertTrue(b)
+        resp = self.client.get(reverse('get_card',
+                               kwargs={'deckid': deck.id}))
 
-    #     self.assertContains(resp, 'score', 10)
+        self.assertEquals(resp.status_code, 404)
 
-    # # def test_get_all_decks(self):
-    # #     DeckFactory.create_batch(5)
+    def test_get_deck(self):
+        deck = DeckFactory(title='test deck')
+        for i in range(0, 10):
+            CardFactory(deck=deck)
 
-    # #     resp = self.client.get(reverse('get_all_decks'))
-    # #     self.assertContains(resp, 'title', 5)
+        resp = self.client.get(reverse('get_deck',
+                               kwargs={'deckid': deck.id}))
 
-    # def test_get_user_deck(self):
-    #     user = User.objects.get(username='auser')
-    #     for i in range(0, 10):
-    #         DeckFactory.create(author=user)
+        self.assertContains(resp, 'score', 10)
 
-    #     userb = User.objects.get(username='buser')
-    #     for i in range(0, 10):
-    #         DeckFactory.create(author=userb)
+    def test_get_decks(self):
+        DeckFactory.create_batch(125)
 
-    #     a = self.client.login(username='auser', password='apass')
-    #     self.assertTrue(a)
-    #     resp = self.client.get('/notecards/get_user_decks/auser/')
+        # test GET request
+        resp = self.client.get(reverse('decks'))
+        self.assertEquals(resp.context['decks'].count(), 50)
 
-    #     self.assertContains(resp, 'author', 10)
+        # test POST request
+        resp = self.client.post(reverse('decks'), {'page_num': 1})
+        self.assertContains(resp, 'title', 50)
+        resp = self.client.post(reverse('decks'), {'page_num': 2})
+        self.assertContains(resp, 'title', 25)
 
-    # def test_add_score_to_card(self):
-    #     card = CardFactory(score=0)
-    #     card.score += 1
-    #     card.save()
-    #     self.assertEqual(1, card.score)
+    def test_get_user_deck(self):
+        user = User.objects.get(username='auser')
+        for i in range(0, 10):
+            DeckFactory.create(author=user)
 
-    # def test_check_answer(self):
-    #     a = self.client.login(username='auser', password='apass')
-    #     self.assertTrue(a)
-    #     user = User.objects.get(username='auser')
+        userb = User.objects.get(username='buser')
+        for i in range(0, 75):
+            DeckFactory.create(author=userb)
 
-    #     deck = DeckFactory.create(author=user, title='test-deck')
-    #     card = CardFactory.create(front='test',
-    #                               back='tset',
-    #                               deck=deck,
-    #                               score=0)
-    #     # test correct answer
-    #     data = {'front': card.front,
-    #             'ans': 'tset',
-    #             }
-    #     resp = self.client.post(reverse('check_answer',
-    #                             kwargs={'title_slug': 'test-deck'}),
-    #                             data=data)
-    #     card = Card.objects.get(id=card.id)
-    #     self.assertContains(resp, 'correct', 1)
-    #     self.assertEqual(card.score, 1)
+        # Test GET from same user that deck belongs to
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        resp = self.client.get(reverse('get_user_decks',
+                               kwargs={'user': 'auser'}))
+        self.assertEquals(resp.context['decks'].count(), 10)
 
-    #     # test wrong answer
-    #     data = {
-    #         'front': card.front,
-    #         'ans': 'wrong',
-    #     }
-    #     resp = self.client.post(reverse('check_answer',
-    #                             kwargs={'title_slug': 'test-deck'}),
-    #                             data=data)
-    #     card = Card.objects.get(id=card.id)
-    #     self.assertContains(resp, 'wrong', 1)
-    #     self.assertEqual(card.score, 0)
+        # Test GET from different user than deck belongs to
+        resp = self.client.get(reverse('get_user_decks',
+                               kwargs={'user': 'buser'}))
+        self.assertEquals(resp.context['decks'].count(), 50)
 
-    #     # test multiple cards
-    #     card2 = CardFactory(deck=deck, front='test', score=0)
-    #     card3 = CardFactory(deck=deck, front='notest', score=0)
+        # Test POST from different user than deck belongs to
+        resp = self.client.post(reverse('get_user_decks',
+                                kwargs={'user': 'buser'}),
+                                {'page_num': 1})
+        self.assertContains(resp, 'title', 25)
 
-    #     resp = self.client.post(reverse('check_answer',
-    #                             kwargs={'title_slug': 'test-deck'}),
-    #                             data=data)
-    #     card = Card.objects.get(id=card.id)
-    #     self.assertEqual(card.score, -1)
-    #     card2 = Card.objects.get(id=card2.id)
-    #     self.assertEqual(card2.score, -1)
-    #     card3 = Card.objects.get(id=card3.id)
-    #     self.assertEqual(card3.score, 0)
+    def test_check_answer(self):
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        user = User.objects.get(username='auser')
 
-    # def test_deckForm(self):
-    #     # save without tags
-    #     form = deckForm({'title': 'Test Deck',
-    #                     'description': 'The description',
-    #                     })
-    #     self.assertTrue(form.is_valid())
+        deck = DeckFactory.create(author=user, title='test-deck')
+        card = CardFactory.create(front='test',
+                                  back='tset',
+                                  deck=deck,
+                                  score=0)
+        # test correct answer
+        data = {'cardid': card.id,
+                'ans': 'tset',
+                }
+        resp = self.client.post(reverse('check_answer',
+                                kwargs={'deckid': deck.id}),
+                                data=data)
+        card = Card.objects.get(id=card.id)
+        self.assertContains(resp, 'correct', 1)
+        self.assertEqual(card.score, 1)
 
-    #     # save with tags
-    #     form = deckForm({'title': 'Test Deck 2',
-    #                      'description': 'Description 2',
-    #                      'tags': 'testing'})
-    #     self.assertTrue(form.is_valid())
+        resp = self.client.post(reverse('check_answer',
+                                kwargs={'deckid': deck.id}),
+                                data=data)
+        card = Card.objects.get(id=card.id)
+        self.assertContains(resp, 'correct', 1)
+        self.assertEqual(card.score, 2)
 
-    # def test_create_deck(self):
-    #     a = self.client.login(username='auser', password='apass')
-    #     self.assertTrue(a)
-    #     user = User.objects.get(username='auser')
+        resp = self.client.post(reverse('check_answer',
+                                kwargs={'deckid': deck.id}),
+                                data=data)
+        card = Card.objects.get(id=card.id)
+        self.assertContains(resp, 'correct', 1)
+        self.assertEqual(card.score, 3)
 
-    #     resp = self.client.post(reverse('create_deck'),
-    #                             {'title': 'Test Deck',
-    #                              'description': 'The description',
-    #                              'tags': 'test, test2'})
-    #     self.assertContains(resp, 'success', 1)
-    #     deck = Deck.objects.get(title='Test Deck')
-    #     self.assertEqual(deck.author, user)
-    #     self.assertEqual(deck.description, 'The description')
-    #     self.assertEqual(deck.slug, 'test-deck')
-    #     self.assertCountEqual(deck.tags.names(), ['test', 'test2'])
+        # test wrong answer
+        data = {
+            'cardid': card.id,
+            'ans': 'wrong',
+        }
+        resp = self.client.post(reverse('check_answer',
+                                kwargs={'deckid': deck.id}),
+                                data=data)
+        card = Card.objects.get(id=card.id)
+        self.assertContains(resp, 'wrong', 1)
+        self.assertEqual(card.score, 1)
 
-    #     # test GET
-    #     resp = self.client.get(reverse('create_deck'))
-    #     # TODO - implemented GET test
+        # test multiple cards
+        card2 = CardFactory(deck=deck, front='test', score=0)
+        card3 = CardFactory(deck=deck, front='notest', score=0)
 
-    # def test_create_card(self):
-    #     a = self.client.login(username='auser', password='apass')
-    #     self.assertTrue(a)
-    #     user = User.objects.get(username='auser')
+        resp = self.client.post(reverse('check_answer',
+                                kwargs={'deckid': deck.id}),
+                                data=data)
+        card = Card.objects.get(id=card.id)
+        self.assertEqual(card.score, 1)
+        card2 = Card.objects.get(id=card2.id)
+        self.assertEqual(card2.score, 1)
+        card3 = Card.objects.get(id=card3.id)
+        self.assertEqual(card3.score, 0)
 
-    #     deck = DeckFactory(author=user)
-    #     url = '/notecards/create_card/' + deck.slug + '/'
-    #     resp = self.client.post(url,
-    #                             {'front': 'question',
-    #                              'back': 'answer'})
-    #     self.assertContains(resp, 'success', 1)
-    #     card = Card.objects.get(front='question')
-    #     self.assertEqual(card.back, 'answer')
-    #     self.assertEqual(card.deck, deck)
-    #     self.assertEqual(card.score, 0)
+    def test_deckForm(self):
+        # save without tags
+        form = deckForm({'title': 'Test Deck',
+                        'description': 'The description',
+                         })
+        self.assertTrue(form.is_valid())
 
-    # def test_clone_deck(self):
-    #     auser = User.objects.get(username='auser')
-    #     buser = User.objects.get(username='buser')
-    #     decka = DeckFactory(author=auser, title='test-deck')
-    #     for i in range(0, 10):
-    #         CardFactory.create(deck=decka)
-    #     decka.tags.add('test', 'atag')
+        # save with tags
+        form = deckForm({'title': 'Test Deck 2',
+                         'description': 'Description 2',
+                         'tags': 'testing'})
+        self.assertTrue(form.is_valid())
 
-    #     # test that clone fails with same user
-    #     a = self.client.login(username='auser', password='apass')
-    #     self.assertTrue(a)
-    #     resp = self.client.post(reverse('clone_deck'),
-    #                             data={'deck': 'test-deck'})
-    #     self.assertContains(resp, 'Error: You', 1)
-    #     self.client.logout()
+    def test_create_deck(self):
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        user = User.objects.get(username='auser')
 
-    #     # test that clone succeeds with different user
-    #     b = self.client.login(username='buser', password='bpass')
-    #     self.assertTrue(b)
-    #     resp = self.client.post(reverse('clone_deck'),
-    #                             data={'deck': 'test-deck'})
-    #     self.assertEqual(resp.status_code, 201)
-    #     bdeck = Deck.objects.get(author=buser, title='test-deck')
-    #     self.assertEqual(10, len(bdeck.card_set.all()))
-    #     self.assertCountEqual(bdeck.tags.names(), ['test', 'atag'])
+        self.client.post(reverse('create_deck'),
+                         {'title': 'Test Deck',
+                          'description': 'The description',
+                          'tags': 'test, test2'},
+                         follow=True)
+        deck = Deck.objects.get(title='Test Deck')
+        self.assertEqual(deck.author, user)
+        self.assertEqual(deck.description, 'The description')
+        self.assertEqual(deck.slug, 'test-deck')
+        self.assertCountEqual(deck.tags.names(), ['test', 'test2'])
+
+        # Test GET
+        resp = self.client.get(reverse('create_deck'))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_create_card(self):
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        user = User.objects.get(username='auser')
+
+        deck = DeckFactory(author=user)
+        resp = self.client.post(reverse('create_card',
+                                kwargs={'deckid': deck.id}),
+                                {'front': 'question',
+                                 'back': 'answer'})
+        self.assertEqual(resp.status_code, 201)
+        card = Card.objects.get(front='question')
+        self.assertEqual(card.back, 'answer')
+        self.assertEqual(card.deck, deck)
+        self.assertEqual(card.score, 0)
+        expected = '<option>question -- answer</option>'
+        self.assertContains(resp, expected, 1, status_code=201)
+
+    def test_clone_deck(self):
+        auser = User.objects.get(username='auser')
+        buser = User.objects.get(username='buser')
+        decka = DeckFactory(author=auser, title='test-deck')
+        for i in range(0, 10):
+            CardFactory.create(deck=decka)
+        decka.tags.add('test', 'atag')
+
+        # test that clone fails with same user
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        resp = self.client.get(reverse('clone_deck'),
+                               {'did': decka.id})
+        self.assertContains(resp, 'Error: You', 1)
+        self.client.logout()
+
+        # test that clone succeeds with different user
+        b = self.client.login(username='buser', password='bpass')
+        self.assertTrue(b)
+        resp = self.client.get(reverse('clone_deck'),
+                               {'did': decka.id})
+        self.assertEqual(resp.status_code, 302)
+        bdeck = Deck.objects.get(author=buser, title='test-deck')
+        self.assertEqual(10, len(bdeck.card_set.all()))
+        self.assertCountEqual(bdeck.tags.names(), ['test', 'atag'])
