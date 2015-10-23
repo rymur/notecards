@@ -25,7 +25,7 @@
             method: 'POST',
             url: '/notecards/check_answer/' + {{ deck.id }} + '/',
             dataType: 'json',
-            data: {front: {{ card.id }}, ans: $('#user_answer').val()},
+            data: {cardid: {{ card.id }}, ans: $('#user_answer').val()},
             success: function(data) {
                 if (data['result'] === 'correct') {
                     $('#qa_div').addClass('correct');

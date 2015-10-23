@@ -34,7 +34,7 @@ def register(request):
 @login_required
 def check_answer(request, deckid):
     deck = get_object_or_404(Deck, pk=deckid)
-    cardid = request.POST.get('front')
+    cardid = request.POST.get('cardid')
     card = Card.objects.get(pk=cardid)
     front = card.front
     retResp = {'answer': card.back, 'result': 'wrong'}
@@ -73,8 +73,7 @@ def get_card(request, deckid):
 
         return render(request, 'notecards/drill.html', context_dict)
     else:
-        return HttpResponse('You do not have access to this deck',
-                            status=404)
+        return HttpResponse(status=404)
 
 
 @login_required
@@ -99,7 +98,7 @@ def get_weak_card(request, deckid):
 
 
 def get_deck(request, deckid):
-    deck = get_object_or_404(Deck, pk=id)
+    deck = get_object_or_404(Deck, pk=deckid)
     cards = deck.card_set.all()
     cardsJSON = serializers.serialize('json', cards)
 
@@ -120,8 +119,8 @@ def get_decks(request):
 
 
 def get_user_decks(request, user):
+    user = User.objects.get(username=user)
     if request.method == 'GET':
-        user = User.objects.get(username=user)
         decks = Deck.objects.filter(author=user).order_by('-dateCreated')[:50]
         return render(request, 'notecards/decks.html', {'decks': decks})
     if request.method == 'POST':

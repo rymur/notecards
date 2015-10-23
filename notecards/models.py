@@ -20,7 +20,7 @@ class Deck(models.Model):
         unique_together = ('author', 'title')
 
     def save(self, *args, **kwargs):
-        if Deck.objects.filter(author=self.author).count() >= 50:
+        if Deck.objects.filter(author=self.author).count() >= 100:
             raise ValidationError('User cannot have more than 50 decks')
         self.slug = slugify(self.title)
         super(Deck, self).save(*args, **kwargs)
