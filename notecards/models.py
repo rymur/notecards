@@ -14,7 +14,6 @@ class Deck(models.Model):
     tags = TaggableManager(blank=True)
     dateCreated = models.DateField(auto_now_add=True)
     dateModified = models.DateTimeField(auto_now=True)
-    # parent = models.ForeignKey("self", on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('author', 'title')

@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 import factory
 from factory import fuzzy
 import random
@@ -44,7 +45,7 @@ class TestNotecardViews(TestCase):
         User.objects.create_user(username='buser', password='bpass')
 
     def test_deck_validation(self):
-        # tests that no user can create more than 50 decks
+        # tests that no user can create more than 100 decks
         auser = User.objects.get(username='auser')
         buser = User.objects.get(username='buser')
         for i in range(0, 100):
@@ -57,6 +58,11 @@ class TestNotecardViews(TestCase):
         except ValidationError:
             self.fail("ValidationError raised on user"
                       "with less than 50 decks")
+
+        # tests that user cannot create multiple decks with the same title
+        DeckFactory(author=buser, title='title')
+        with self.assertRaises(IntegrityError):
+            DeckFactory(author=buser, title='title')
 
     def test_deck_model_numCards(self):
         deck = DeckFactory()
@@ -90,6 +96,28 @@ class TestNotecardViews(TestCase):
                                kwargs={'deckid': deck.id}))
 
         self.assertEquals(resp.status_code, 404)
+
+    def test_get_weak_card(self):
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        user = User.objects.get(username='auser')
+        deck = DeckFactory(author=user)
+        for i in range(0, 10):
+            r = random.randint(1, 3)
+            CardFactory(deck=deck, score=r)
+        for i in range(0, 10):
+            r = random.randint(4, 5)
+            CardFactory(deck=deck, score=r)
+        for i in range(0, 30):
+            resp = self.client.get(reverse('get_weak_card',
+                                   kwargs={'deckid': deck.id}))
+            self.assertLess(resp.context['card'].score, 4)
+
+        # Test user can't get other user's cards
+        self.client.logout()
+        self.client.login(username='buser', password='bpass')
+        resp = self.client.get(reverse('get_weak_card',
+                               kwargs={'deckid': deck.id}))
 
     def test_get_deck(self):
         deck = DeckFactory(title='test deck')
@@ -278,3 +306,44 @@ class TestNotecardViews(TestCase):
         bdeck = Deck.objects.get(author=buser, title='test-deck')
         self.assertEqual(10, len(bdeck.card_set.all()))
         self.assertCountEqual(bdeck.tags.names(), ['test', 'atag'])
+
+    def delete_deck(self):
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+
+        # TEST POST
+
+        # Test that delete_deck works on same user's decks
+        auser = User.objects.get(username='auser')
+        deck1 = DeckFactory(author=auser)
+        deck2 = DeckFactory(author=auser)
+        self.assertEquals(2, Deck.objects.all().count())
+        resp = self.client.post(reverse('delete_deck'),
+                                {'did': deck1.id})
+        self.assertEquals(302, resp.status_code)
+        self.assertEquals(1, Deck.objects.all().count())
+        resp = self.client.post(reverse('delete_deck'),
+                                {'did': deck2.id})
+        self.assertEquals(302, resp.status_code)
+        self.assertEquals(0, Deck.objects.all().count())
+
+        # Test that delete_deck fails on different user's decks
+        buser = User.objects.get(username='buser')
+        deckb = DeckFactory(author=buser)
+        resp = self.client.post(reverse('delete_deck'),
+                                {'did': deckb.id})
+        self.assertEquals(404, resp.status_code)
+
+        # TEST GET
+
+        # Requesting user owns deck
+        decka = DeckFactory(author=auser)
+        resp = self.client.get(reverse('delete_deck'),
+                               {'did': decka.id})
+        self.assertEquals(200, resp.status_code)
+        self.assertContains(resp, 'Are you sure', 1)
+
+        # Requesting user does not own deck
+        resp = self.client.get(reverse('delete_deck'),
+                               {'did': deckb.id})
+        self.assertEquals(404, resp.status_code)
