@@ -347,3 +347,32 @@ class TestNotecardViews(TestCase):
         resp = self.client.get(reverse('delete_deck'),
                                {'did': deckb.id})
         self.assertEquals(404, resp.status_code)
+
+    def test_publish_deck(self):
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        auser = User.objects.get(username='auser')
+        deck = DeckFactory(author=auser)
+        self.assertTrue(deck.published)
+
+        # unpublish
+        resp = self.client.post(reverse('publish'),
+                                {'did': deck.id})
+        self.assertEquals(200, resp.status_code)
+        deck = Deck.objects.get(pk=deck.id)
+        self.assertFalse(deck.published)
+
+        # republish
+        resp = self.client.post(reverse('publish'),
+                                {'did': deck.id})
+        self.assertEquals(200, resp.status_code)
+        deck = Deck.objects.get(pk=deck.id)
+        self.assertTrue(deck.published)
+
+        # test that a user can't publish someone else's deck
+        self.client.logout()
+        b = self.client.login(username='buser', password='bpass')
+        self.assertTrue(b)
+        resp = self.client.post(reverse('publish'),
+                                {'did': deck.id})
+        self.assertEquals(404, resp.status_code)

@@ -18,4 +18,5 @@ urlpatterns = patterns('',
                        url(r'^register/$', views.register, name='register'),
                        url(r'^profile/$', views.profile, name='profile'),
                        url(r'^delete/$', views.delete_deck, name='delete_deck'),
+                       url(r'^publish/$', views.publish_deck, name='publish'),
                        )
