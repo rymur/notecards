@@ -14,13 +14,14 @@ class Deck(models.Model):
     tags = TaggableManager(blank=True)
     dateCreated = models.DateField(auto_now_add=True)
     dateModified = models.DateTimeField(auto_now=True)
+    published = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ('author', 'title')
 
     def save(self, *args, **kwargs):
         if Deck.objects.filter(author=self.author).count() >= 100:
-            raise ValidationError('User cannot have more than 50 decks')
+            raise ValidationError('User cannot have more than 100 decks')
         self.slug = slugify(self.title)
         super(Deck, self).save(*args, **kwargs)
 

@@ -61,6 +61,16 @@
 		</form>
 		<br />
 		<br />
+		<form action="{% url 'publish' %}" method="POST">
+			{% csrf_token %}
+			<input type="hidden" name="did" value="{{ deck.id }}">
+			{% if not deck.published %}
+			<input type="submit" value="Publish Deck">
+			{% else %}
+			<input type="submit" value="Unpublish Deck">
+			{% endif %}
+		</form>
+		<br />
 		<a href="/notecards/delete?did={{ deck.id }}">
 			<button class="btn btn-danger">Delete deck</button>
 		</a>

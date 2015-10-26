@@ -104,13 +104,13 @@ def get_deck(request, deckid):
 
 def get_decks(request):
     if request.method == 'GET':
-        decks = Deck.objects.order_by('-dateCreated')[:50]
+        decks = Deck.objects.filter(published=True).order_by('-dateCreated')[:50]
         return render(request, 'notecards/decks.html', {'decks': decks})
     elif request.method == 'POST':
         page = int(request.POST.get('page_num'))
         start = page * 50
         end = start + 50
-        decks = Deck.objects.order_by('-dateCreated')[start:end]
+        decks = Deck.objects.filter(published=True).order_by('-dateCreated')[start:end]
         decksJSON = serializers.serialize('json', decks)
         return HttpResponse(decksJSON, content_type='application/json')
 
@@ -207,6 +207,7 @@ def clone_deck(request):
                        title=deck.title,
                        slug=deck.slug,
                        description=deck.description,
+                       published=False
                        )
         newDeck.save()
         tags = deck.tags.names()
@@ -257,7 +258,7 @@ def delete_deck(request):
             return HttpResponseRedirect(reverse('get_user_decks',
                                         kwargs={'user': user.username}))
         else:
-            return HttpResponse(404)
+            return HttpResponse(status=404)
 
     if request.method == 'GET':
         deckID = request.GET.get('did')
@@ -268,4 +269,18 @@ def delete_deck(request):
                           'notecards/delete_confirm.html',
                           context_dict)
         else:
-            return HttpResponse(404)
+            return HttpResponse(status=404)
+
+
+@login_required
+def publish_deck(request):
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    if request.method == 'POST':
+        deckID = request.POST.get('did')
+        deck = get_object_or_404(Deck, pk=deckID)
+        if deck.author == user:
+            deck.published = not deck.published
+            deck.save()
+            return HttpResponse(status=200)
+    return HttpResponse(status=404)
