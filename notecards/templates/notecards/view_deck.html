@@ -1,6 +1,8 @@
 {% extends 'notecards/base.html' %}
 
 {% block body_block %}
+	<h1 style="text-align: center;">{{ deck.title }}</h1>
+	<br />
 	{% if user == deck.author %}
 		<div class="col-md-12 text-center">
 			<a href="/notecards/get_card/{{ deck.id }}/">
@@ -21,66 +23,75 @@
 		<br />
 	{% endif %}
 
-	{{ deckform.as_p }}
-
-	<h3>Cards</h3>
-	<select size="10" name="cards" id="cards">
-		{% for card in cards %}
-			{% if user == deck.author %}
-			<option class="skill{{ card.score }}" value={{ card.pk }}>{{ card.front }} -- {{ card.back }}</option>
-			{% else %}
-			<option value={{ card.pk }}>{{ card.front }} -- {{ card.back }}</option>
-			{% endif %}
-		{% endfor %}
-	</select>
 	<br />
-	{% if user == deck.author %}
-		<button type="button" class="btn btn-danger" id="delbtn">Delete</button>
-		<button type="button" class="btn btn-primary" id="editbtn">Edit</button>
+	<hr />
+	<div class="row">
+		<div class="col-md-6 col-md-offset-3">
+			{{ deckform.as_p }}
+		
+
 		<br />
-		<div id="editdiv" style="display: none;">
-			<form id="editform" action="#" method="POST">
-				{% csrf_token %}
-				<label for="editfront">Front:</label>
-				<input name="editfront" id="editfront">
-				<label for="editback">Back:</label>
-				<input name="editback" id="editback">
-				<br />
-				<input type="submit" value="Change" />
-			</form>
-		</div>
-		<h3>Add Cards</h3>
-		<form id="cardcreate" action="#" method="POST">
-			{% csrf_token %}
-			{{ cardform.front.label_tag }}
-			{{ cardform.front }}
-			{{ cardform.back.label_tag }}
-			{{ cardform.back }}
+		<h3>Cards</h3>
+		<select size="10" name="cards" id="cards">
+			{% for card in cards %}
+				{% if user == deck.author %}
+				<option class="skill{{ card.score }}" value={{ card.pk }}>{{ card.front }} -- {{ card.back }}</option>
+				{% else %}
+				<option value={{ card.pk }}>{{ card.front }} -- {{ card.back }}</option>
+				{% endif %}
+			{% endfor %}
+		</select>
+		<br />
+		{% if user == deck.author %}
+			<button type="button" class="btn btn-danger" id="delbtn">Delete</button>
+			<button type="button" class="btn btn-primary" id="editbtn">Edit</button>
 			<br />
-			<input type="submit" value="Create" />
-		</form>
+			<div id="editdiv" style="display: none;">
+				<form id="editform" action="#" method="POST">
+					{% csrf_token %}
+					<label for="editfront">Front:</label>
+					<input name="editfront" id="editfront">
+					<label for="editback">Back:</label>
+					<input name="editback" id="editback">
+					<br />
+					<input type="submit" value="Change" />
+				</form>
+			</div>
 		<br />
-		<br />
-		<form action="{% url 'publish' %}" method="POST">
-			{% csrf_token %}
-			<input type="hidden" name="did" value="{{ deck.id }}">
-			{% if not deck.published %}
-			<input type="submit" value="Publish Deck">
-			{% else %}
-			<input type="submit" value="Unpublish Deck">
-			{% endif %}
-		</form>
-		<br />
-		<a href="/notecards/delete?did={{ deck.id }}">
-			<button class="btn btn-danger">Delete deck</button>
-		</a>
-	{% elif user.is_authenticated %}
-		<a href="{% url 'clone_deck' %}?did={{ deck.id }}">
-			<button class="btn btn-success">
-				Clone Deck
-			</button>
-		</a>
-	{% endif %}
+		<h3>Add Cards</h3>
+			<form id="cardcreate" action="#" method="POST">
+				{% csrf_token %}
+				{{ cardform.front.label_tag }}
+				{{ cardform.front }}
+				{{ cardform.back.label_tag }}
+				{{ cardform.back }}
+				<br />
+				<input type="submit" value="Create" />
+			</form>
+			<br />
+			<br />
+			<form action="{% url 'publish' %}" method="POST">
+				{% csrf_token %}
+				<input type="hidden" name="did" value="{{ deck.id }}">
+				{% if not deck.published %}
+				<input type="submit" value="Publish Deck" class="btn btn-primary">
+				{% else %}
+				<input type="submit" value="Unpublish Deck" class="btn btn-primary">
+				{% endif %}
+			</form>
+			<br />
+			<a href="/notecards/delete?did={{ deck.id }}">
+				<button class="btn btn-danger">Delete deck</button>
+			</a>
+		{% elif user.is_authenticated %}
+			<a href="{% url 'clone_deck' %}?did={{ deck.id }}">
+				<button class="btn btn-success">
+					Clone Deck
+				</button>
+			</a>
+		{% endif %}
+		</div>
+	</div>
 {% endblock %}
 
 {% block script_block %}

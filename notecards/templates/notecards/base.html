@@ -34,9 +34,9 @@
                             <li><a href="{% url 'create_deck' %}">Create a Deck</a></li>
                             <li role="separator" class="divider"></li>
                             <li>
-                                <form method="POST" action="{% url 'account_logout' %}">
+                                <a id="lolink" href="#">Logout</a>
+                                <form id="loform" method="POST" action="{% url 'account_logout' %}">
                                     {% csrf_token %}
-                                    <input type="submit" value="Logout">
                                 </form>
                             </li>
                         </ul>

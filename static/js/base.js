@@ -27,3 +27,7 @@ $.ajaxSetup({
         }
     }
 });
+
+$('#lolink').click(function() {
+    $('#loform').submit();
+});

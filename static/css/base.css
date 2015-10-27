@@ -30,9 +30,13 @@
     background-color: #3E79D1;
 }
 
+.navbar-default .navbar-nav .dropdown-menu li a:hover {
+    color: white;
+    background-color: #3385FF;
+}
+
 .navbar-default .navbar-nav li a:active {
     background-color: #296ACC;
-    color: #FFF;
 }
 
 .site-masthead {
@@ -97,12 +101,20 @@
     margin: 2em;
 }
 
+#delbtn, #editbtn {
+    margin: 10px 0 10px 0;
+}
+
 #welcome {
     text-align: center;
 }
 
 #search {
     border-radius: 10px;
+}
+
+input[type=text], textarea {
+    width: 100%;
 }
 
 label {
@@ -113,6 +125,10 @@ label {
 
 select {
     width: 30em;
+}
+
+hr {
+    border-color: #C3C3C3;
 }
 
 body {
