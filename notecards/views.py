@@ -58,7 +58,7 @@ def get_card(request, deckid):
     userid = request.user.id
     user = User.objects.get(pk=userid)
     deck = Deck.objects.filter(pk=deckid, author=user)
-    if deck.count() > 0:
+    if deck.count() > 0 and deck[0].card_set.count() > 0:
         minScore = deck.aggregate(Min('card__score'))
         minScore = minScore['card__score__min']
         maxScore = deck.aggregate(Max('card__score'))
@@ -81,17 +81,16 @@ def get_weak_card(request, deckid):
     userid = request.user.id
     user = User.objects.get(pk=userid)
     deck = get_object_or_404(Deck, pk=deckid, author=user)
-    if deck:
-        cards = deck.card_set.filter(score__lte=3)
-        if cards.count() > 0:
-            rindex = random.randint(0, len(cards) - 1)
-            card = cards[rindex]
+    cards = deck.card_set.filter(score__lte=3)
+    if cards.count() > 0:
+        rindex = random.randint(0, len(cards) - 1)
+        card = cards[rindex]
 
-            context_dict = {'card': card, 'deck': deck, 'mode': 'gwc/'}
+        context_dict = {'card': card, 'deck': deck, 'mode': 'gwc/'}
 
-            return render(request, 'notecards/drill.html', context_dict)
-        else:
-            return HttpResponse(status=404)
+        return render(request, 'notecards/drill.html', context_dict)
+    else:
+        return HttpResponse(status=404)
 
 
 def get_deck(request, deckid):
