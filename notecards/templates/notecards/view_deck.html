@@ -2,8 +2,8 @@
 
 {% block body_block %}
 	<h1 style="text-align: center;">{{ deck.title }}</h1>
-	<br />
 	{% if user == deck.author %}
+		<br />
 		<div class="col-md-12 text-center">
 			<a href="/notecards/get_card/{{ deck.id }}/">
 				<button class="btn btn-success btn-wide">
@@ -21,16 +21,21 @@
 			</a>
 		</div>
 		<br />
+		<br />
 	{% endif %}
-
-	<br />
 	<hr />
 	<div class="row">
 		<div class="col-md-6 col-md-offset-3">
-			{{ deckform.as_p }}
-		
-
-		<br />
+			{% if user == deck.author %}
+				<form method="POST" action="{% url 'edit_deck' deckid=deck.id %}">
+					{% csrf_token %}
+					{{ deckform.as_p }}
+					<input type="submit" value="Make Changes">
+				</form>
+			{% else %}
+				{{ deckform.as_p }}	
+			{% endif %}
+		<hr />
 		<h3>Cards</h3>
 		<select size="10" name="cards" id="cards">
 			{% for card in cards %}
@@ -41,7 +46,7 @@
 				{% endif %}
 			{% endfor %}
 		</select>
-		<br />
+		<p></p>
 		{% if user == deck.author %}
 			<button type="button" class="btn btn-danger" id="delbtn">Delete</button>
 			<button type="button" class="btn btn-primary" id="editbtn">Edit</button>
@@ -57,35 +62,35 @@
 					<input type="submit" value="Change" />
 				</form>
 			</div>
-		<br />
-		<h3>Add Cards</h3>
+			<br />
+			<h3>Add Cards</h3>
 			<form id="cardcreate" action="#" method="POST">
 				{% csrf_token %}
 				{{ cardform.front.label_tag }}
 				{{ cardform.front }}
+				<p></p>
 				{{ cardform.back.label_tag }}
 				{{ cardform.back }}
-				<br />
+				<p></p>
 				<input type="submit" value="Create" />
 			</form>
-			<br />
-			<br />
+			<hr />
 			<form action="{% url 'publish' %}" method="POST">
 				{% csrf_token %}
 				<input type="hidden" name="did" value="{{ deck.id }}">
 				{% if not deck.published %}
-				<input type="submit" value="Publish Deck" class="btn btn-primary">
+				<input type="submit" value="Publish Deck" class="btn btn-primary btn-wide btn-center">
 				{% else %}
-				<input type="submit" value="Unpublish Deck" class="btn btn-primary">
+				<input type="submit" value="Unpublish Deck" class="btn btn-primary btn-wide btn-center">
 				{% endif %}
 			</form>
 			<br />
 			<a href="/notecards/delete?did={{ deck.id }}">
-				<button class="btn btn-danger">Delete deck</button>
+				<button class="btn btn-danger btn-wide btn-center">Delete deck</button>
 			</a>
 		{% elif user.is_authenticated %}
 			<a href="{% url 'clone_deck' %}?did={{ deck.id }}">
-				<button class="btn btn-success">
+				<button class="btn btn-success btn-wide btn-center">
 					Clone Deck
 				</button>
 			</a>

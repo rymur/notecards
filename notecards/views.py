@@ -196,12 +196,33 @@ def edit_card(request, cardid):
 
 
 @login_required
+def edit_deck(request, deckid):
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    deck = get_object_or_404(Deck, author=user, pk=deckid)
+    if user == deck.author:
+        form = deckForm(request.POST)
+        if form.is_valid():
+            deck.title = form.cleaned_data['title']
+            deck.description = form.cleaned_data['description']
+            deck.tags.clear()
+            for tag in form.cleaned_data['tags']:
+                deck.tags.add(tag)
+            deck.save()
+            queryParam = '?did={0}'.format(deckid)
+            return HttpResponseRedirect(reverse('view_deck') + queryParam)
+
+
+@login_required
 def clone_deck(request):
     deckid = request.GET.get('did')
     userID = request.user.id
     user = User.objects.get(pk=userID)
     deck = Deck.objects.get(pk=deckid)
     if deck.author != user:
+        if Deck.objects.get(author=user, title=deck.title):
+            return HttpResponse('Error: You already own a deck with '
+                                'this title')
         newDeck = Deck(author=user,
                        title=deck.title,
                        slug=deck.slug,
