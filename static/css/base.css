@@ -63,7 +63,7 @@
 }
 
 .skill1 {
-    background-color: #A41313;
+    background-color: #E42828;
 }
 
 .skill2 {
@@ -81,6 +81,12 @@
 .skill5 {
     background-color: blue;
     color: white;
+}
+
+.btn-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #qa_div {
@@ -113,6 +119,10 @@
     border-radius: 10px;
 }
 
+#id_login {
+    width: auto;
+}
+
 input[type=text], textarea {
     width: 100%;
 }
@@ -124,7 +134,12 @@ label {
 }
 
 select {
-    width: 30em;
+    width: 100%;
+}
+
+option {
+    text-align: center;
+    font-size: 1.3em;
 }
 
 hr {

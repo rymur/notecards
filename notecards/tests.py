@@ -281,6 +281,38 @@ class TestNotecardViews(TestCase):
         expected = '<option>question -- answer</option>'
         self.assertContains(resp, expected, 1, status_code=201)
 
+    def test_edit_deck(self):
+        auser = User.objects.get(username='auser')
+        a = self.client.login(username='auser', password='apass')
+        self.assertTrue(a)
+        deck = DeckFactory(author=auser)
+        for i in range(0, 10):
+            CardFactory(deck=deck)
+        resp = self.client.post(reverse('edit_deck',
+                                kwargs={'deckid': deck.id}),
+                                {'title': 'title',
+                                 'description': 'description',
+                                 'tags': 'tag1, tag2'})
+        self.assertEquals(resp.status_code, 302)
+        deck = Deck.objects.get(pk=deck.id)
+        self.assertEquals(deck.title, 'title')
+        self.assertEquals(deck.description, 'description')
+        self.assertCountEqual(deck.tags.names(), ['tag1', 'tag2'])
+        self.assertEquals(deck.card_set.count(), 10)
+
+        self.client.logout()
+        self.client.login(username='buser', password='bpass')
+        resp = self.client.post(reverse('edit_deck',
+                                kwargs={'deckid': deck.id}),
+                                data={'title': 'title2',
+                                 'description': 'description2',
+                                 'tags': 'tag3, tag4'})
+        self.assertEquals(resp.status_code, 404)
+        self.assertEquals(deck.title, 'title')
+        self.assertEquals(deck.description, 'description')
+        self.assertCountEqual(deck.tags.names(), ['tag1', 'tag2'])
+        self.assertEquals(deck.card_set.count(), 10)
+
     def test_clone_deck(self):
         auser = User.objects.get(username='auser')
         buser = User.objects.get(username='buser')
