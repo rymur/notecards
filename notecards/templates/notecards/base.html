@@ -17,35 +17,45 @@
     <div class="site-masthead">
         <div class="container">
             <nav class="navbar navbar-default">
-                <ul class="nav navbar-nav">
-                <li><a class="nav-item" href="{% url 'index' %}">Home</a></li>
-                <li><a class="nav-item" href="{% url 'decks' %}">Browse Decks</a></li>
-                {% if user.is_authenticated %}
-                    <li><a class="nav-item" href="{% url 'decks' %}{{ user.get_username }}">Your Decks</a></li>
-                {% endif %}
-                </ul>
-                <ul class="nav navbar-nav navbar-right">
-                {% if user.is_authenticated %}
-                    <li role="presentation" class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ user.get_username }} <span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'profile' %}">Profile</a></li>
-                            <li><a href="{% url 'decks' %}{{ user.get_username }}">Your Decks</a></li>
-                            <li><a href="{% url 'create_deck' %}">Create a Deck</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li>
-                                <a id="lolink" href="#">Logout</a>
-                                <form id="loform" method="POST" action="{% url 'account_logout' %}">
-                                    {% csrf_token %}
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                {% else %}
-                    <li><a class="nav-item" href="{% url 'account_login' %}">Login</a></li>
-                    <li><a class="nav-item" href="{% url 'account_signup' %}">Register</a></li>
-                {% endif %}
-                </ul>
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#site-navbar-collapse" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse" id="site-navbar-collapse">
+                    <ul class="nav navbar-nav">
+                    <li><a class="nav-item" href="{% url 'index' %}">Home</a></li>
+                    <li><a class="nav-item" href="{% url 'decks' %}">Browse Decks</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a class="nav-item" href="{% url 'decks' %}{{ user.get_username }}">Your Decks</a></li>
+                    {% endif %}
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                    {% if user.is_authenticated %}
+                        <li role="presentation" class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ user.get_username }} <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'profile' %}">Profile</a></li>
+                                <li><a href="{% url 'decks' %}{{ user.get_username }}">Your Decks</a></li>
+                                <li><a href="{% url 'create_deck' %}">Create a Deck</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a id="lolink" href="#">Logout</a>
+                                    <form id="loform" method="POST" action="{% url 'account_logout' %}">
+                                        {% csrf_token %}
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li><a class="nav-item" href="{% url 'account_login' %}">Login</a></li>
+                        <li><a class="nav-item" href="{% url 'account_signup' %}">Register</a></li>
+                    {% endif %}
+                    </ul>
+                </div>
             </nav>
         </div>
     </div>

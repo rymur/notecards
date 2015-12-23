@@ -24,6 +24,7 @@
 .centerdiv {
     border: 0.5em gray solid;
     padding: 1em;
+    width: 27em;
 }
 
 .signup label {
