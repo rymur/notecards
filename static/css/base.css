@@ -35,6 +35,16 @@
     background-color: #3385FF;
 }
 
+@media (max-width: 767px) {
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+        color: #EEE;
+    }
+
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover {
+        color: white;
+    }
+}
+
 .navbar-default .navbar-nav li a:active {
     background-color: #296ACC;
 }
@@ -87,6 +97,14 @@
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #DDD;
+}
+
+.navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle:hover {
+    background-color: #61A1FF;
 }
 
 #qa_div {
