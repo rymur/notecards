@@ -263,7 +263,7 @@ def view_deck(request):
 
 @login_required
 def profile(request):
-    return render(request, 'registration/profile.html', {})
+    return render(request, 'account/profile.html', {})
 
 
 @login_required

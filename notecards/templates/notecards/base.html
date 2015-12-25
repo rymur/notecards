@@ -38,9 +38,11 @@
                         <li role="presentation" class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ user.get_username }} <span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li><a href="{% url 'profile' %}">Profile</a></li>
                                 <li><a href="{% url 'decks' %}{{ user.get_username }}">Your Decks</a></li>
                                 <li><a href="{% url 'create_deck' %}">Create a Deck</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="{% url 'account_change_password' %}">Change Password</a></li>
+                                <li><a href="{% url 'account_email' %}">Email Settings</a></li>
                                 <li role="separator" class="divider"></li>
                                 <li>
                                     <a id="lolink" href="#">Logout</a>

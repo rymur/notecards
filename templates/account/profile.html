@@ -1,0 +1,37 @@
+{% extends 'account/base.html' %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Profile" %}{% endblock %}
+
+{% block body_block %}
+    <h1>Profile</h1>
+    <hr>
+    <h2>Change Password</h2>
+    <p></p>
+    <form method="POST" action="{% url 'account_change_password' %}" class="password_change">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="action">{% trans "Change Password" %}</button>
+    </form>
+    <hr>
+    <h2>E-mail</h2>
+    <form action="{% url 'account_email' %}" class="email_list" method="post">
+    {% csrf_token %}   
+    <p>Current e-mail address: {{ user.email }}</p>
+    <p>
+        {% if user.email.verified %}
+        Verified
+        {% else %}
+        {{ user.emailaddress.verified }}
+        Not Verified <button class="secondaryAction" type="submit" name="action_send">Re-send Verification</button>
+        {% endif %}
+    </p>
+    </form>
+    <h3>Change E-mail</h3>
+    <form method="POST" action="{% url 'account_email' %}" class="add_email">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button name="action_change" type="submit">Change E-mail</button>
+    </form>
+{% endblock %}
