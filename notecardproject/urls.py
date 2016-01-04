@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',
      {'next_page': '/notecards/'}),
     url(r'^accounts/', include('allauth.urls')),
+    url(r'^search/', include('haystack.urls')),
 ]
