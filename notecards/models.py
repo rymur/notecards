@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.template.defaultfilters import slugify
 from django.core.exceptions import ValidationError
+from django.core import urlresolvers
 
 from taggit.managers import TaggableManager
 
@@ -28,6 +29,10 @@ class Deck(models.Model):
     @property
     def numCards(self):
         return self.card_set.count()
+
+    def get_absolute_url(self):
+        return "{0}?did={1}".format(urlresolvers.reverse('view_deck'),
+                                    self.id)
 
     def __repr__(self):
         return self.title
