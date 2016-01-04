@@ -220,15 +220,14 @@ def clone_deck(request):
     user = User.objects.get(pk=userID)
     deck = Deck.objects.get(pk=deckid)
     if deck.author != user:
-        if Deck.objects.get(author=user, title=deck.title):
+        newDeck, created = Deck.objects.get_or_create(author=user,
+                                                      title=deck.title)
+        if not created:
             return HttpResponse('Error: You already own a deck with '
                                 'this title')
-        newDeck = Deck(author=user,
-                       title=deck.title,
-                       slug=deck.slug,
-                       description=deck.description,
-                       published=False
-                       )
+        newDeck.slug = deck.slug
+        newDeck.description = deck.description,
+        newDeck.published = False
         newDeck.save()
         tags = deck.tags.names()
         for tag in tags:
