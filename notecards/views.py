@@ -104,34 +104,41 @@ def get_deck(request, deckid):
 
 def get_decks(request):
     if request.method == 'GET':
-        decks = Deck.objects.filter(published=True).order_by('-dateCreated')[:50]
-        return render(request, 'notecards/decks.html', {'decks': decks,
-                                                        'mode': 'decks'})
-    elif request.method == 'POST':
-        page = int(request.POST.get('page_num'))
-        start = page * 50
-        end = start + 50
-        decks = Deck.objects.filter(published=True).order_by('-dateCreated')[start:end]
-        context = {'decks': decks}
-        # decksJSON = serializers.serialize('json', decks)
-        # return HttpResponse(decksJSON, content_type='application/json')
-        return render_to_response('notecards/deck_template.html', context)
+        page = request.GET.get('page')
+        if page:
+            page = int(page)
+        else:
+            page = 1
+        if page > 0:
+            start = (page - 1) * 50
+            end = start + 50
+            decks = Deck.objects.filter(published=True).order_by('-dateCreated')[start:end]
+
+            return render(request, 'notecards/decks.html', {'decks': decks,
+                                                            'next': page + 1,
+                                                            'prev': page - 1})
+        else:
+            return HttpResponse('Invalid page number')
 
 
 def get_user_decks(request, user):
-    user = User.objects.get(username=user)
     if request.method == 'GET':
-        decks = Deck.objects.filter(author=user).order_by('-dateCreated')[:50]
-        return render(request, 'notecards/decks.html', {'decks': decks,
-                                                        'mode': 'get_user_decks'})
-    if request.method == 'POST':
-        page = int(request.POST.get('page_num'))
-        start = page * 50
-        end = start + 50
-        decks = Deck.objects.filter(author=user).order_by('-dateCreated')[start:end]
-        decksJSON = serializers.serialize('json', decks)
-        return HttpResponse(decksJSON, content_type='application/json')
+        user = User.objects.get(username=user)
+        page = request.GET.get('page')
+        if page:
+            page = int(page)
+        else:
+            page = 1
+        if page > 0:
+            start = (page - 1) * 50
+            end = start + 50
+            decks = Deck.objects.filter(author=user).order_by('-dateCreated')[start:end]
 
+            return render(request, 'notecards/decks.html', {'decks': decks,
+                                                            'next': page + 1,
+                                                            'prev': page - 1})
+        else:
+            return HttpResponse('Invalid page number')
 
 @login_required
 def create_deck(request):
