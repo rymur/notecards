@@ -1,5 +1,5 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404, render_to_response
+from django.http import HttpResponse, HttpResponseRedirect  
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.db.models import Max, Min
@@ -13,6 +13,7 @@ from notecards.forms import deckForm, cardForm
 import random
 import json
 
+import pdb
 
 def index(request):
     return render(request, 'notecards/index.html', {})
@@ -104,21 +105,25 @@ def get_deck(request, deckid):
 def get_decks(request):
     if request.method == 'GET':
         decks = Deck.objects.filter(published=True).order_by('-dateCreated')[:50]
-        return render(request, 'notecards/decks.html', {'decks': decks})
+        return render(request, 'notecards/decks.html', {'decks': decks,
+                                                        'mode': 'decks'})
     elif request.method == 'POST':
         page = int(request.POST.get('page_num'))
         start = page * 50
         end = start + 50
         decks = Deck.objects.filter(published=True).order_by('-dateCreated')[start:end]
-        decksJSON = serializers.serialize('json', decks)
-        return HttpResponse(decksJSON, content_type='application/json')
+        context = {'decks': decks}
+        # decksJSON = serializers.serialize('json', decks)
+        # return HttpResponse(decksJSON, content_type='application/json')
+        return render_to_response('notecards/deck_template.html', context)
 
 
 def get_user_decks(request, user):
     user = User.objects.get(username=user)
     if request.method == 'GET':
         decks = Deck.objects.filter(author=user).order_by('-dateCreated')[:50]
-        return render(request, 'notecards/decks.html', {'decks': decks})
+        return render(request, 'notecards/decks.html', {'decks': decks,
+                                                        'mode': 'get_user_decks'})
     if request.method == 'POST':
         page = int(request.POST.get('page_num'))
         start = page * 50
@@ -258,11 +263,6 @@ def view_deck(request):
                     'deck': deck}
 
     return render(request, 'notecards/view_deck.html', context_dict)
-
-
-@login_required
-def profile(request):
-    return render(request, 'account/profile.html', {})
 
 
 @login_required

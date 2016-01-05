@@ -339,6 +339,11 @@ class TestNotecardViews(TestCase):
         self.assertEqual(10, len(bdeck.card_set.all()))
         self.assertCountEqual(bdeck.tags.names(), ['test', 'atag'])
 
+        # test that clone fails with already owned deck
+        resp = self.client.get(reverse('clone_deck'),
+                               {'did': decka.id})
+        self.assertContains(resp, 'with this title', 1)
+
     def delete_deck(self):
         a = self.client.login(username='auser', password='apass')
         self.assertTrue(a)
