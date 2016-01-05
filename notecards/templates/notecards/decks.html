@@ -1,6 +1,7 @@
 {% extends 'notecards/base.html' %}
 
 {% block body_block %}
+
 <table class="table table-striped table-hover">
     <thead>
         <tr>
@@ -10,7 +11,8 @@
             <th>Tags</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="decktable">
+    {% csrf_token %}
         {% for deck in decks %}
                 <tr class="clickable-row" data-href="{% url 'view_deck' %}?did={{ deck.id }}">
                     <td>{{ deck.title }}</td>
@@ -38,5 +40,27 @@
                 window.document.location = $(this).data("href");
             });
         });
+
+        var page = 1;
+
+        function getMoreEntries(page) {
+            $.ajax('/notecards/{{ mode }}/', {
+                type: 'POST',
+                dataType: 'html',
+                data: {page_num: page},
+                success: function(data) {
+                    $("#decktable").append(data);
+                }
+            })
+            return 1;
+        }
+
+        $(document).ready(function() {
+            $(window).scroll(function() {
+                if ($(window).scrollTop() + $(window).height() >= $(document).height() - 150) {
+                    page += getMoreEntries(page);
+                }
+            })
+        })
     </script>
 {% endblock %}

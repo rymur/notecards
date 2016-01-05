@@ -1,0 +1,16 @@
+{% for deck in decks %}
+    <tr class="clickable-row" data-href="{% url 'view_deck' %}?did={{ deck.id }}">
+        <td>{{ deck.title }}</td>
+        <td>{{ deck.author }}</td>
+        <td>{{ deck.numCards }}</td>
+        <td>
+            {% for tag in deck.tags.all %}
+                {% if forloop.counter == deck.tags.all|length %}
+                    {{ tag.name }}
+                {% else %}
+                    {{ tag.name }},
+                {% endif %}
+            {% endfor %}
+        </td>
+    </tr>
+{% endfor %}
