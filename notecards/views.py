@@ -113,10 +113,12 @@ def get_decks(request):
             start = (page - 1) * 50
             end = start + 50
             decks = Deck.objects.filter(published=True).order_by('-dateCreated')[start:end]
+            last = len(decks) < 50
 
             return render(request, 'notecards/decks.html', {'decks': decks,
                                                             'next': page + 1,
-                                                            'prev': page - 1})
+                                                            'prev': page - 1,
+                                                            'lastpg': last})
         else:
             return HttpResponse('Invalid page number')
 
@@ -133,10 +135,12 @@ def get_user_decks(request, user):
             start = (page - 1) * 50
             end = start + 50
             decks = Deck.objects.filter(author=user).order_by('-dateCreated')[start:end]
+            last = len(decks) < 50
 
             return render(request, 'notecards/decks.html', {'decks': decks,
                                                             'next': page + 1,
-                                                            'prev': page - 1})
+                                                            'prev': page - 1,
+                                                            'lastpg': last})
         else:
             return HttpResponse('Invalid page number')
 
