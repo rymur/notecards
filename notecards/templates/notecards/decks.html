@@ -6,7 +6,9 @@
     {% if prev > 0 %}
     <a href=".?page={{ prev }}" class="btn btn-default">Prev</a>
     {% endif %}
+    {% if not lastpg %}
     <a href=".?page={{ next }}" class="btn btn-default">Next</a>
+    {% endif %}
 </div>
 <table class="table table-striped table-hover">
     <thead>
@@ -40,7 +42,9 @@
     {% if prev > 0 %}
     <a href=".?page={{ prev }}" class="btn btn-default">Prev</a>
     {% endif %}
+    {% if not lastpg %}
     <a href=".?page={{ next }}" class="btn btn-default">Next</a>
+    {% endif %}
 </div>
 {% endblock %}
 

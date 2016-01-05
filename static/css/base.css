@@ -107,6 +107,10 @@
     background-color: #61A1FF;
 }
 
+.clickable-row:hover {
+    cursor: pointer;
+}
+
 #qa_div {
     border: 1px solid black;
     border-radius: 3em;
