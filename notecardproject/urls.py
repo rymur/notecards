@@ -15,10 +15,11 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from notecards import views
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^notecards/', include('notecards.urls')),
+    url(r'^', include('notecards.urls')),
     url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',
      {'next_page': '/notecards/'}),
     url(r'^accounts/', include('allauth.urls')),
