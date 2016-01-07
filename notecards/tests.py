@@ -132,15 +132,15 @@ class TestNotecardViews(TestCase):
     def test_get_decks(self):
         DeckFactory.create_batch(125)
 
-        # test GET request
+        # test getting first page without specifying page number
         resp = self.client.get(reverse('decks'))
         self.assertEquals(resp.context['decks'].count(), 50)
 
-        # test POST request
-        resp = self.client.post(reverse('decks'), {'page_num': 1})
-        self.assertContains(resp, 'title', 50)
-        resp = self.client.post(reverse('decks'), {'page_num': 2})
-        self.assertContains(resp, 'title', 25)
+        # test getting subsequent pages
+        resp = self.client.get(reverse('decks'), {'page': 2})
+        self.assertEquals(resp.context['decks'].count(), 50)
+        resp = self.client.get(reverse('decks'), {'page': 3})
+        self.assertEquals(resp.context['decks'].count(), 25)
 
     def test_get_user_deck(self):
         user = User.objects.get(username='auser')
@@ -151,23 +151,23 @@ class TestNotecardViews(TestCase):
         for i in range(0, 75):
             DeckFactory.create(author=userb)
 
-        # Test GET from same user that deck belongs to
+        # Test from same user that deck belongs to
         a = self.client.login(username='auser', password='apass')
         self.assertTrue(a)
         resp = self.client.get(reverse('get_user_decks',
                                kwargs={'user': 'auser'}))
         self.assertEquals(resp.context['decks'].count(), 10)
 
-        # Test GET from different user than deck belongs to
+        # Test from different user than deck belongs to
         resp = self.client.get(reverse('get_user_decks',
                                kwargs={'user': 'buser'}))
         self.assertEquals(resp.context['decks'].count(), 50)
 
-        # Test POST from different user than deck belongs to
-        resp = self.client.post(reverse('get_user_decks',
-                                kwargs={'user': 'buser'}),
-                                {'page_num': 1})
-        self.assertContains(resp, 'title', 25)
+        # Test different user requesting second page
+        resp = self.client.get(reverse('get_user_decks',
+                               kwargs={'user': 'buser'}),
+                                {'page': 2})
+        self.assertEquals(resp.context['decks'].count(), 25)
 
     def test_check_answer(self):
         a = self.client.login(username='auser', password='apass')
