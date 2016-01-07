@@ -154,7 +154,7 @@
     margin-right: 5px;
 }
 
-input[type=text], textarea {
+input[type=text]:not(.centerdiv input[type=text]), textarea {
     width: 100%;
 }
 
