@@ -85,7 +85,7 @@
 				{% endif %}
 			</form>
 			<br />
-			<a href="/notecards/delete?did={{ deck.id }}">
+			<a href="{% url 'delete_deck' %}?did={{ deck.id }}">
 				<button class="btn btn-danger btn-wide btn-center">Delete deck</button>
 			</a>
 		{% elif user.is_authenticated %}
@@ -101,13 +101,10 @@
 
 {% block script_block %}
 	<script type="text/javascript">
-
 		$("#cardcreate").submit(function(event) {
 			event.preventDefault();
-
 			var url = '/notecards/create_card/{{ deck.id }}/';
 			var formData = $('#cardcreate').serialize();
-
 			$.ajax({
 				method: 'POST',
 				url: url,
@@ -120,7 +117,6 @@
 				}
 			});
 		});
-
 		$("#delbtn").click(function() {
 			var delCard = $("#cards option:selected").val();
 			$.ajax({
@@ -131,7 +127,6 @@
 				}
 			});
 		});
-
 		$("#editbtn").click(function() {
 			$("#editdiv").toggle();
 			var text = $("#cards option:selected").text();
@@ -139,7 +134,6 @@
 			$("#editfront").val(sides[0]);
 			$("#editback").val(sides[1]);
 		});
-
 		$("#editform").submit(function(event) {
 			event.preventDefault();
 			var editCard = $("#cards option:selected").val();

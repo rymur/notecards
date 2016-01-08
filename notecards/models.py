@@ -9,7 +9,7 @@ from taggit.managers import TaggableManager
 
 class Deck(models.Model):
     author = models.ForeignKey(User)
-    title = models.CharField(max_length=256, blank=True)
+    title = models.CharField(max_length=256)
     slug = models.SlugField(max_length=256)
     description = models.TextField(blank=True)
     tags = TaggableManager(blank=True)

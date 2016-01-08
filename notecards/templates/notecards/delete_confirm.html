@@ -4,7 +4,7 @@
     <h1 style="text-align: center;">Are you sure you want to delete {{ deck.title }}?</h1>
     <div class="row">
         <div class="col-sm-3 col-sm-offset-4">
-            <form method="POST" action="/notecards/delete/">
+            <form method="POST" action="{% url 'delete_deck' %}">
                 {% csrf_token %}
                 <input type="hidden" name="did" value="{{ deck.id }}">
                 <input type="submit" value="Yes, I'm sure" class="btn btn-danger btn-lg">
