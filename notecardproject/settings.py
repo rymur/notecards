@@ -14,11 +14,10 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 
 from notecardproject.KEY_SECRET import KEY_SECRET
-from notecardproject.passes import db_pass, email_pass
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/notecards/'
 
 LOGIN_URL = '/accounts/login/'
 
@@ -30,9 +29,9 @@ LOGIN_URL = '/accounts/login/'
 SECRET_KEY = KEY_SECRET
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'flashnerd.tk', 'www.flashnerd.tk']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -100,12 +99,8 @@ WSGI_APPLICATION = 'notecardproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'flashcards',
-	'USER': 'flashcards',
-	'PASSWORD': db_pass,
-	'HOST': 'localhost',
-	'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -145,10 +140,3 @@ HAYSTACK_CONNECTIONS = {
         'INDEX_NAME': 'haystack',
     },
 }
-
-# For Email
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'flashnerdsystem@gmail.com'
-EMAIL_HOST_PASSWORD = email_pass
-EMAIL_PORT = 587
