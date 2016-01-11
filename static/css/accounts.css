@@ -17,14 +17,16 @@
     text-align: center;
 }
 
-#signinbtn {
-    margin: 0.5em;
-}
-
 .centerdiv {
     border: 0.5em gray solid;
     padding: 1em;
     width: 27em;
+}
+
+@media (max-width: 767px) {
+    .centerdiv {
+        margin: 0 auto;
+    }
 }
 
 .centerdiv input {
@@ -33,6 +35,15 @@
 
 .signup label {
     width: 40%;
+}
+
+#signinbtn {
+    margin: 0.5em;
+}
+
+#signupbtn {
+    display: block;
+    margin: 0 auto;
 }
 
 label[for=id_remember] {
