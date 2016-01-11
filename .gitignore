@@ -4,3 +4,4 @@ env/
 db.sqlite3
 *wsgi.py
 *email_pass.py
+*settings.py

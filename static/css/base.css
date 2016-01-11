@@ -198,4 +198,9 @@ footer {
     position: relative;
     clear: both;
     width: 100%;
+    color: #EEE;
+}
+
+footer a {
+    color: #EEE;
 }
