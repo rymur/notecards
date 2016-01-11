@@ -65,18 +65,21 @@ class TestNotecardViews(TestCase):
             DeckFactory(author=buser, title='title')
 
     def test_deck_model_numCards(self):
+        # test that cards are correclty associated with a deck
         deck = DeckFactory()
         for i in range(0, 10):
             CardFactory(deck=deck)
         self.assertEqual(10, deck.numCards)
 
     def test_add_score_to_card(self):
+        # test adding a point to a card
         card = CardFactory(score=0)
         card.score += 1
         card.save()
         self.assertEqual(1, card.score)
 
     def test_get_card(self):
+        # test that a user can fetch a card from the get_card view
         a = self.client.login(username='auser', password='apass')
         self.assertTrue(a)
         user = User.objects.get(username='auser')
@@ -98,6 +101,7 @@ class TestNotecardViews(TestCase):
         self.assertEquals(resp.status_code, 404)
 
     def test_get_weak_card(self):
+        # test user can draw a weak card from get_weak_card view
         a = self.client.login(username='auser', password='apass')
         self.assertTrue(a)
         user = User.objects.get(username='auser')
@@ -120,6 +124,8 @@ class TestNotecardViews(TestCase):
                                kwargs={'deckid': deck.id}))
 
     def test_get_deck(self):
+        # get test that the get_deck view correctly returns the details
+        # of a deck
         deck = DeckFactory(title='test deck')
         for i in range(0, 10):
             CardFactory(deck=deck)
@@ -248,6 +254,7 @@ class TestNotecardViews(TestCase):
         self.assertTrue(a)
         user = User.objects.get(username='auser')
 
+        # test POST
         self.client.post(reverse('create_deck'),
                          {'title': 'Test Deck',
                           'description': 'The description',
@@ -264,6 +271,8 @@ class TestNotecardViews(TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_create_card(self):
+        # Test that user can create a card using the create_card view
+
         a = self.client.login(username='auser', password='apass')
         self.assertTrue(a)
         user = User.objects.get(username='auser')
@@ -288,6 +297,8 @@ class TestNotecardViews(TestCase):
         deck = DeckFactory(author=auser)
         for i in range(0, 10):
             CardFactory(deck=deck)
+
+        # Test that same user can edit their own deck
         resp = self.client.post(reverse('edit_deck',
                                 kwargs={'deckid': deck.id}),
                                 {'title': 'title',
@@ -300,13 +311,14 @@ class TestNotecardViews(TestCase):
         self.assertCountEqual(deck.tags.names(), ['tag1', 'tag2'])
         self.assertEquals(deck.card_set.count(), 10)
 
+        # Test that a different user cannot edit another user's deck
         self.client.logout()
         self.client.login(username='buser', password='bpass')
         resp = self.client.post(reverse('edit_deck',
                                 kwargs={'deckid': deck.id}),
                                 data={'title': 'title2',
-                                 'description': 'description2',
-                                 'tags': 'tag3, tag4'})
+                                      'description': 'description2',
+                                      'tags': 'tag3, tag4'})
         self.assertEquals(resp.status_code, 404)
         self.assertEquals(deck.title, 'title')
         self.assertEquals(deck.description, 'description')
