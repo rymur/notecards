@@ -1,23 +1,16 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
+import json
+import random
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.db.models import Max, Min
-from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404
 
-from notecards.models import Deck, Card
 from notecards.forms import deckForm, cardForm
-
-import random
-import json
-
-
-def index(request):
-    '''
-    Simply returns the home page
-    '''
-    return render(request, 'notecards/index.html', {})
+from notecards.models import Deck, Card
 
 
 @login_required
@@ -56,6 +49,183 @@ def check_answer(request, deckid):
 
 
 @login_required
+def clone_deck(request):
+    '''Creates a copy of a user's deck for another user to own.'''
+    deckid = request.GET.get('did')
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    deck = Deck.objects.get(pk=deckid)
+    # Make sure user isn't trying to clone their own deck
+    if deck.author != user:
+        newDeck, created = Deck.objects.get_or_create(author=user,
+                                                      title=deck.title)
+        # Check to make sure that user doesn't already have a deck the
+        # same title
+        if not created:
+            return HttpResponse('Error: You already own a deck with '
+                                'this title')
+        # Copy the deck
+        newDeck.slug = deck.slug
+        newDeck.description = deck.description,
+        newDeck.published = False
+        newDeck.save()
+        # Copy the tags
+        tags = deck.tags.names()
+        for tag in tags:
+            newDeck.tags.add(tag)
+        newDeck.save()
+        # Copy the cards
+        for card in deck.card_set.all():
+            newCard = Card(front=card.front,
+                           back=card.back,
+                           deck=newDeck,
+                           score=0)
+            newCard.save()
+        # Redirect user to their newly cloned deck
+        url = reverse('view_deck') + '?did=' + str(newDeck.id)
+        return HttpResponseRedirect(url)
+    else:
+        return HttpResponse('Error: You already own this deck')
+
+
+@login_required
+def create_card(request, deckid):
+    '''
+    Accepts an AJAX POST request to create a new card.
+    Returns card information in HTML to be inserted into the page.
+    '''
+    if request.method == 'POST':
+        userID = request.user.id
+        user = User.objects.get(pk=userID)
+        # redundant filter to make sure user owns the deck
+        deck = get_object_or_404(Deck, pk=deckid, author=user)
+        form = cardForm(request.POST)
+        if form.is_valid():
+            front = form.cleaned_data['front']
+            back = form.cleaned_data['back']
+            card = Card(front=front, back=back, deck=deck)
+            card.save()
+            # Card goes into a select box so we use the <option> tag
+            content = '<option>{0} -- {1}</option>'.format(front, back)
+            return HttpResponse(status=201,
+                                content=content,
+                                content_type='text/html')
+        else:
+            return render(request, 'notecards/build.html', {'form': form})
+
+
+@login_required
+def create_deck(request):
+    '''
+    GET: Present the user with the form to create a new deck.
+    POST: Process user input and create the new deck.
+    '''
+    if request.method == 'POST':
+        form = deckForm(request.POST)
+        if form.is_valid():
+            userID = request.user.id
+            user = User.objects.get(pk=userID)
+            title = form.cleaned_data['title']
+            desc = form.cleaned_data['description']
+            deck = Deck(author=user, title=title, description=desc)
+            deck.save()
+            for tag in form.cleaned_data['tags']:
+                deck.tags.add(tag)
+            deck.save()
+            return HttpResponseRedirect(reverse('decks'))
+        else:
+            return render(request,
+                          'notecards/create_deck.html',
+                          {'form': form})
+    form = deckForm()
+    return render(request, 'notecards/create_deck.html', {'form': form})
+
+
+@login_required
+def delete_deck(request):
+    '''
+    POST: Deletes the deck.
+    GET: Returns a page asking user to confirm the deletion.
+    '''
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    if request.method == 'POST':
+        deckID = request.POST.get('did')
+        deck = get_object_or_404(Deck, pk=deckID)
+        if deck.author == user:
+            deck.delete()
+            # Return user to view all their remaining decks
+            return HttpResponseRedirect(reverse('get_user_decks',
+                                        kwargs={'user': user.username}))
+        else:
+            return HttpResponse(status=404)
+
+    if request.method == 'GET':
+        deckID = request.GET.get('did')
+        deck = get_object_or_404(Deck, pk=deckID)
+        if deck.author == user:
+            context_dict = {'deck': deck}
+            return render(request,
+                          'notecards/delete_confirm.html',
+                          context_dict)
+        else:
+            return HttpResponse(status=404)
+
+
+@login_required
+def edit_card(request, cardid):
+    '''
+    POST: Replaces a card's information with new information from the user.
+          Returns new card info in HTML form to be appended into the page.
+    DELETE: Deletes the card from the deck.
+    '''
+    card = Card.objects.get(pk=cardid)
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    if card.deck.author == user:
+        if request.method == 'POST':
+            # Replace the old card info with new info
+            front = request.POST.get('editfront')
+            back = request.POST.get('editback')
+            form = cardForm({'front': front, 'back': back})
+            if form.is_valid():
+                card.front = form.cleaned_data['front']
+                card.back = form.cleaned_data['back']
+                card.save()
+                content = '<option>{0} -- {1}</option>'.format(
+                    card.front,
+                    card.back)
+                return HttpResponse(status=200,
+                                    content=content,
+                                    content_type='text/html')
+        elif request.method == 'DELETE':
+            card.delete()
+            return HttpResponse(status=200)
+
+
+@login_required
+def edit_deck(request, deckid):
+    '''
+    Replaces deck information with new information submitted by user.
+    '''
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    # Make sure user owns deck
+    deck = get_object_or_404(Deck, author=user, pk=deckid)
+    if user == deck.author:
+        form = deckForm(request.POST)
+        if form.is_valid():
+            deck.title = form.cleaned_data['title']
+            deck.description = form.cleaned_data['description']
+            deck.tags.clear()
+            for tag in form.cleaned_data['tags']:
+                deck.tags.add(tag)
+            deck.save()
+            queryParam = '?did={0}'.format(deckid)
+            return HttpResponseRedirect(reverse('view_deck') + queryParam)
+
+
+@login_required
 def get_card(request, deckid):
     '''
     Fetches a card to be presented to the user
@@ -80,29 +250,6 @@ def get_card(request, deckid):
         # 'mode' is used in the template to build the URL for fetching
         # the next card.
         context_dict = {'card': card, 'deck': deck, 'mode': 'get_card/'}
-
-        return render(request, 'notecards/drill.html', context_dict)
-    else:
-        return HttpResponse(status=404)
-
-
-@login_required
-def get_weak_card(request, deckid):
-    '''
-    Fetches a card with a score of 3 or less to be presented to the user.
-    '''
-    userid = request.user.id
-    user = User.objects.get(pk=userid)
-    deck = get_object_or_404(Deck, pk=deckid, author=user)
-    cards = deck.card_set.filter(score__lte=3)
-    if cards.count() > 0:
-        # If we have any weak cards then draw a random one
-        rindex = random.randint(0, len(cards) - 1)
-        card = cards[rindex]
-
-        # 'mode' is used in the template to build the URL for fetching
-        # the next card
-        context_dict = {'card': card, 'deck': deck, 'mode': 'gwc/'}
 
         return render(request, 'notecards/drill.html', context_dict)
     else:
@@ -180,149 +327,50 @@ def get_user_decks(request, user):
 
 
 @login_required
-def create_deck(request):
+def get_weak_card(request, deckid):
     '''
-    GET: Present the user with the form to create a new deck.
-    POST: Process user input and create the new deck.
+    Fetches a card with a score of 3 or less to be presented to the user.
     '''
-    if request.method == 'POST':
-        form = deckForm(request.POST)
-        if form.is_valid():
-            userID = request.user.id
-            user = User.objects.get(pk=userID)
-            title = form.cleaned_data['title']
-            desc = form.cleaned_data['description']
-            deck = Deck(author=user, title=title, description=desc)
-            deck.save()
-            for tag in form.cleaned_data['tags']:
-                deck.tags.add(tag)
-            deck.save()
-            return HttpResponseRedirect(reverse('decks'))
-        else:
-            return render(request,
-                          'notecards/create_deck.html',
-                          {'form': form})
-    form = deckForm()
-    return render(request, 'notecards/create_deck.html', {'form': form})
+    userid = request.user.id
+    user = User.objects.get(pk=userid)
+    deck = get_object_or_404(Deck, pk=deckid, author=user)
+    cards = deck.card_set.filter(score__lte=3)
+    if cards.count() > 0:
+        # If we have any weak cards then draw a random one
+        rindex = random.randint(0, len(cards) - 1)
+        card = cards[rindex]
 
+        # 'mode' is used in the template to build the URL for fetching
+        # the next card
+        context_dict = {'card': card, 'deck': deck, 'mode': 'gwc/'}
 
-@login_required
-def create_card(request, deckid):
-    '''
-    Accepts an AJAX POST request to create a new card.
-    Returns card information in HTML to be inserted into the page.
-    '''
-    if request.method == 'POST':
-        userID = request.user.id
-        user = User.objects.get(pk=userID)
-        # redundant filter to make sure user owns the deck
-        deck = get_object_or_404(Deck, pk=deckid, author=user)
-        form = cardForm(request.POST)
-        if form.is_valid():
-            front = form.cleaned_data['front']
-            back = form.cleaned_data['back']
-            card = Card(front=front, back=back, deck=deck)
-            card.save()
-            # Card goes into a select box so we use the <option> tag
-            content = '<option>{0} -- {1}</option>'.format(front, back)
-            return HttpResponse(status=201,
-                                content=content,
-                                content_type='text/html')
-        else:
-            return render(request, 'notecards/build.html', {'form': form})
-
-
-@login_required
-def edit_card(request, cardid):
-    '''
-    POST: Replaces a card's information with new information from the user.
-          Returns new card info in HTML form to be appended into the page.
-    DELETE: Deletes the card from the deck.
-    '''
-    card = Card.objects.get(pk=cardid)
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    if card.deck.author == user:
-        if request.method == 'POST':
-            # Replace the old card info with new info
-            front = request.POST.get('editfront')
-            back = request.POST.get('editback')
-            form = cardForm({'front': front, 'back': back})
-            if form.is_valid():
-                card.front = form.cleaned_data['front']
-                card.back = form.cleaned_data['back']
-                card.save()
-                content = '<option>{0} -- {1}</option>'.format(
-                    card.front,
-                    card.back)
-                return HttpResponse(status=200,
-                                    content=content,
-                                    content_type='text/html')
-        elif request.method == 'DELETE':
-            card.delete()
-            return HttpResponse(status=200)
-
-
-@login_required
-def edit_deck(request, deckid):
-    '''
-    Replaces deck information with new information submitted by user.
-    '''
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    # Make sure user owns deck
-    deck = get_object_or_404(Deck, author=user, pk=deckid)
-    if user == deck.author:
-        form = deckForm(request.POST)
-        if form.is_valid():
-            deck.title = form.cleaned_data['title']
-            deck.description = form.cleaned_data['description']
-            deck.tags.clear()
-            for tag in form.cleaned_data['tags']:
-                deck.tags.add(tag)
-            deck.save()
-            queryParam = '?did={0}'.format(deckid)
-            return HttpResponseRedirect(reverse('view_deck') + queryParam)
-
-
-@login_required
-def clone_deck(request):
-    '''Creates a copy of a user's deck for another user to own.'''
-    deckid = request.GET.get('did')
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    deck = Deck.objects.get(pk=deckid)
-    # Make sure user isn't trying to clone their own deck
-    if deck.author != user:
-        newDeck, created = Deck.objects.get_or_create(author=user,
-                                                      title=deck.title)
-        # Check to make sure that user doesn't already have a deck the
-        # same title
-        if not created:
-            return HttpResponse('Error: You already own a deck with '
-                                'this title')
-        # Copy the deck
-        newDeck.slug = deck.slug
-        newDeck.description = deck.description,
-        newDeck.published = False
-        newDeck.save()
-        # Copy the tags
-        tags = deck.tags.names()
-        for tag in tags:
-            newDeck.tags.add(tag)
-        newDeck.save()
-        # Copy the cards
-        for card in deck.card_set.all():
-            newCard = Card(front=card.front,
-                           back=card.back,
-                           deck=newDeck,
-                           score=0)
-            newCard.save()
-        # Redirect user to their newly cloned deck
-        url = reverse('view_deck') + '?did=' + str(newDeck.id)
-        return HttpResponseRedirect(url)
+        return render(request, 'notecards/drill.html', context_dict)
     else:
-        return HttpResponse('Error: You already own this deck')
+        return HttpResponse(status=404)
+
+
+def index(request):
+    '''
+    Simply returns the home page
+    '''
+    return render(request, 'notecards/index.html', {})
+
+
+@login_required
+def publish_deck(request):
+    '''
+    Makes a deck visable or invisible to other users when browsing decks.
+    '''
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    if request.method == 'POST':
+        deckID = request.POST.get('did')
+        deck = get_object_or_404(Deck, pk=deckID)
+        if deck.author == user:
+            deck.published = not deck.published
+            deck.save()
+            return HttpResponse(status=200)
+    return HttpResponse(status=404)
 
 
 def view_deck(request):
@@ -343,51 +391,3 @@ def view_deck(request):
                     'deck': deck}
 
     return render(request, 'notecards/view_deck.html', context_dict)
-
-
-@login_required
-def delete_deck(request):
-    '''
-    POST: Deletes the deck.
-    GET: Returns a page asking user to confirm the deletion.
-    '''
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    if request.method == 'POST':
-        deckID = request.POST.get('did')
-        deck = get_object_or_404(Deck, pk=deckID)
-        if deck.author == user:
-            deck.delete()
-            # Return user to view all their remaining decks
-            return HttpResponseRedirect(reverse('get_user_decks',
-                                        kwargs={'user': user.username}))
-        else:
-            return HttpResponse(status=404)
-
-    if request.method == 'GET':
-        deckID = request.GET.get('did')
-        deck = get_object_or_404(Deck, pk=deckID)
-        if deck.author == user:
-            context_dict = {'deck': deck}
-            return render(request,
-                          'notecards/delete_confirm.html',
-                          context_dict)
-        else:
-            return HttpResponse(status=404)
-
-
-@login_required
-def publish_deck(request):
-    '''
-    Makes a deck visable or invisible to other users when browsing decks.
-    '''
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    if request.method == 'POST':
-        deckID = request.POST.get('did')
-        deck = get_object_or_404(Deck, pk=deckID)
-        if deck.author == user:
-            deck.published = not deck.published
-            deck.save()
-            return HttpResponse(status=200)
-    return HttpResponse(status=404)
