@@ -136,7 +136,8 @@ def get_decks(request):
         start = (page - 1) * 50
         end = start + 50
         # Only fetch published decks
-        decks = Deck.objects.filter(published=True).order_by('-dateCreated')[start:end]
+        decks = Deck.objects.filter(published=True) \
+                            .order_by('-dateCreated')[start:end]
         # last is a boolean that tells the template not to render the
         # 'next' button if we're already on the last page as indicated
         # by getting fewer than 50 decks in the query
@@ -166,7 +167,8 @@ def get_user_decks(request, user):
         if page > 0:
             start = (page - 1) * 50
             end = start + 50
-            decks = Deck.objects.filter(author=user).order_by('-dateCreated')[start:end]
+            decks = Deck.objects.filter(author=user) \
+                                .order_by('-dateCreated')[start:end]
             last = len(decks) < 50
 
             return render(request, 'notecards/decks.html', {'decks': decks,
@@ -197,7 +199,9 @@ def create_deck(request):
             deck.save()
             return HttpResponseRedirect(reverse('decks'))
         else:
-            return render(request, 'notecards/create_deck.html', {'form': form})
+            return render(request,
+                          'notecards/create_deck.html',
+                          {'form': form})
     form = deckForm()
     return render(request, 'notecards/create_deck.html', {'form': form})
 

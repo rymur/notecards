@@ -172,7 +172,7 @@ class TestNotecardViews(TestCase):
         # Test different user requesting second page
         resp = self.client.get(reverse('get_user_decks',
                                kwargs={'user': 'buser'}),
-                                {'page': 2})
+                               {'page': 2})
         self.assertEquals(resp.context['decks'].count(), 25)
 
     def test_check_answer(self):
