@@ -5,16 +5,21 @@
     margin: auto;
 }
 
-#google_login:hover {
-    background-image: url('../images/btn_google_signin_dark_focus_web.png');
-}
-
 #google_login:active {
     background-image: url('../images/btn_google_signin_dark_pressed_web.png');
 }
 
-.form_div {
-    text-align: center;
+#google_login:hover {
+    background-image: url('../images/btn_google_signin_dark_focus_web.png');
+}
+
+#signinbtn {
+    margin: 0.5em;
+}
+
+#signupbtn {
+    display: block;
+    margin: 0 auto;
 }
 
 .centerdiv {
@@ -39,23 +44,18 @@
     margin: 0.5em;
 }
 
+.form_div {
+    text-align: center;
+}
+
 .signup label {
     width: 40%;
 }
 
-#signinbtn {
-    margin: 0.5em;
-}
-
-#signupbtn {
-    display: block;
-    margin: 0 auto;
+h1 {
+    text-align: center;
 }
 
 label[for=id_remember] {
     width: auto;
-}
-
-h1 {
-    text-align: center;
 }
