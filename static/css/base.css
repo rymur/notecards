@@ -1,11 +1,11 @@
-.navbar-right {
-    padding-right: 15px;
-}
-
 .correct {
     -webkit-box-shadow: 0px 0px 17px 8px rgba(93,186,108,1);
     -moz-box-shadow: 0px 0px 17px 8px rgba(93,186,108,1);
     box-shadow: 0px 0px 17px 8px rgba(93,186,108,1);
+}
+
+.fullwidth {
+    width: 100%;
 }
 
 .wrong {
@@ -52,6 +52,10 @@
 .site-masthead {
     background-color: #3385FF;
     margin-bottom: 1em;
+}
+
+.navbar-right {
+    padding-right: 15px;
 }
 
 .navbar-default .navbar-nav .dropdown-menu li a {
@@ -152,14 +156,6 @@
 #btndiv a {
     margin-left: 5px;
     margin-right: 5px;
-}
-
-input[type=text], textarea{
-    width: 100%;
-}
-
-.centerdiv input[type=text] {
-    width: 45%;
 }
 
 label {
