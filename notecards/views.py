@@ -192,9 +192,12 @@ def edit_card(request, cardid):
                 card.front = form.cleaned_data['front']
                 card.back = form.cleaned_data['back']
                 card.save()
-                content = '<option>{0} -- {1}</option>'.format(
-                    card.front,
-                    card.back)
+                content = '''<option class=skill{0} value="{1}">
+                          {2} -- {3}
+                          </option>'''.format(card.score,
+                                              card.id,
+                                              card.front,
+                                              card.back)
                 return HttpResponse(status=200,
                                     content=content,
                                     content_type='text/html')
