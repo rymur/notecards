@@ -1,23 +1,16 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
+import json
+import random
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.db.models import Max, Min
-from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404
 
-from notecards.models import Deck, Card
 from notecards.forms import deckForm, cardForm
-
-import random
-import json
-
-
-def index(request):
-    '''
-    Simply returns the home page
-    '''
-    return render(request, 'notecards/index.html', {})
+from notecards.models import Deck, Card
 
 
 @login_required
@@ -56,150 +49,43 @@ def check_answer(request, deckid):
 
 
 @login_required
-def get_card(request, deckid):
-    '''
-    Fetches a card to be presented to the user
-    '''
-    # Get information necessary to determine which deck to pull from
-    userid = request.user.id
-    user = User.objects.get(pk=userid)
-    deck = Deck.objects.filter(pk=deckid, author=user)
-    # Make sure deck actually has cards in it
-    if deck.count() > 0 and deck[0].card_set.count() > 0:
-        # Randomly select a card to draw, biasing towards weaker cards
-        minScore = deck.aggregate(Min('card__score'))
-        minScore = minScore['card__score__min']
-        maxScore = deck.aggregate(Max('card__score'))
-        maxScore = maxScore['card__score__max']
-        rscore = random.randint(minScore, maxScore)
-        deck = deck[0]
-        cards = deck.card_set.filter(score__lte=rscore)
-        rindex = random.randint(0, len(cards) - 1)
-        card = cards[rindex]
-
-        # 'mode' is used in the template to build the URL for fetching
-        # the next card.
-        context_dict = {'card': card, 'deck': deck, 'mode': 'get_card/'}
-
-        return render(request, 'notecards/drill.html', context_dict)
+def clone_deck(request):
+    '''Creates a copy of a user's deck for another user to own.'''
+    deckid = request.GET.get('did')
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    deck = Deck.objects.get(pk=deckid)
+    # Make sure user isn't trying to clone their own deck
+    if deck.author != user:
+        newDeck, created = Deck.objects.get_or_create(author=user,
+                                                      title=deck.title)
+        # Check to make sure that user doesn't already have a deck the
+        # same title
+        if not created:
+            return HttpResponse('Error: You already own a deck with '
+                                'this title')
+        # Copy the deck
+        newDeck.slug = deck.slug
+        newDeck.description = deck.description,
+        newDeck.published = False
+        newDeck.save()
+        # Copy the tags
+        tags = deck.tags.names()
+        for tag in tags:
+            newDeck.tags.add(tag)
+        newDeck.save()
+        # Copy the cards
+        for card in deck.card_set.all():
+            newCard = Card(front=card.front,
+                           back=card.back,
+                           deck=newDeck,
+                           score=0)
+            newCard.save()
+        # Redirect user to their newly cloned deck
+        url = reverse('view_deck') + '?did=' + str(newDeck.id)
+        return HttpResponseRedirect(url)
     else:
-        return HttpResponse(status=404)
-
-
-@login_required
-def get_weak_card(request, deckid):
-    '''
-    Fetches a card with a score of 3 or less to be presented to the user.
-    '''
-    userid = request.user.id
-    user = User.objects.get(pk=userid)
-    deck = get_object_or_404(Deck, pk=deckid, author=user)
-    cards = deck.card_set.filter(score__lte=3)
-    if cards.count() > 0:
-        # If we have any weak cards then draw a random one
-        rindex = random.randint(0, len(cards) - 1)
-        card = cards[rindex]
-
-        # 'mode' is used in the template to build the URL for fetching
-        # the next card
-        context_dict = {'card': card, 'deck': deck, 'mode': 'gwc/'}
-
-        return render(request, 'notecards/drill.html', context_dict)
-    else:
-        return HttpResponse(status=404)
-
-
-def get_deck(request, deckid):
-    '''
-    Returns all cards in a deck in JSON format
-    '''
-    deck = get_object_or_404(Deck, pk=deckid)
-    cards = deck.card_set.all()
-    cardsJSON = serializers.serialize('json', cards)
-
-    return HttpResponse(cardsJSON, content_type='application/json')
-
-
-def get_decks(request):
-    '''
-    Fetches a maximum of 50 decks to display to the user in order of
-    creation date.
-    Returns a page populated with rows of said decks.
-    '''
-    page = request.GET.get('page')
-    if page:
-        page = int(page)
-    else:
-        # Default to 1st page if no page number present in GET request
-        page = 1
-    if page > 0:
-        start = (page - 1) * 50
-        end = start + 50
-        # Only fetch published decks
-        decks = Deck.objects.filter(published=True).order_by('-dateCreated')[start:end]
-        # last is a boolean that tells the template not to render the
-        # 'next' button if we're already on the last page as indicated
-        # by getting fewer than 50 decks in the query
-        last = len(decks) < 50
-
-        return render(request, 'notecards/decks.html', {'decks': decks,
-                                                        'next': page + 1,
-                                                        'prev': page - 1,
-                                                        'lastpg': last})
-    else:
-        return HttpResponse('Invalid page number')
-
-
-def get_user_decks(request, user):
-    '''
-    Fetches a maximum of 50 decks to display to the user in order of
-    creation date. The only decks returned are those belonging to the user.
-    Returns a page populated with rows of said decks.
-    '''
-    if request.method == 'GET':
-        user = User.objects.get(username=user)
-        page = request.GET.get('page')
-        if page:
-            page = int(page)
-        else:
-            page = 1
-        if page > 0:
-            start = (page - 1) * 50
-            end = start + 50
-            decks = Deck.objects.filter(author=user).order_by('-dateCreated')[start:end]
-            last = len(decks) < 50
-
-            return render(request, 'notecards/decks.html', {'decks': decks,
-                                                            'next': page + 1,
-                                                            'prev': page - 1,
-                                                            'lastpg': last})
-        else:
-            return HttpResponse('Invalid page number')
-
-
-@login_required
-def create_deck(request):
-    '''
-    GET: Present the user with the form to create a new deck.
-    POST: Process user input and create the new deck.
-    '''
-    if request.method == 'POST':
-        form = deckForm(request.POST)
-        if form.is_valid():
-            userID = request.user.id
-            user = User.objects.get(pk=userID)
-            title = form.cleaned_data['title']
-            desc = form.cleaned_data['description']
-            deck = Deck(author=user, title=title, description=desc)
-            deck.save()
-            for tag in form.cleaned_data['tags']:
-                deck.tags.add(tag)
-            deck.save()
-            return HttpResponseRedirect(reverse('decks'))
-        else:
-            return render(request, 'notecards/create_deck.html', {'form': form})
-    form = deckForm()
-    return render(request, 'notecards/create_deck.html', {'form': form})
+        return HttpResponse('Error: You already own this deck')
 
 
 @login_required
@@ -226,6 +112,64 @@ def create_card(request, deckid):
                                 content_type='text/html')
         else:
             return render(request, 'notecards/build.html', {'form': form})
+
+
+@login_required
+def create_deck(request):
+    '''
+    GET: Present the user with the form to create a new deck.
+    POST: Process user input and create the new deck.
+    '''
+    if request.method == 'POST':
+        form = deckForm(request.POST)
+        if form.is_valid():
+            userID = request.user.id
+            user = User.objects.get(pk=userID)
+            title = form.cleaned_data['title']
+            desc = form.cleaned_data['description']
+            deck = Deck(author=user, title=title, description=desc)
+            deck.save()
+            for tag in form.cleaned_data['tags']:
+                deck.tags.add(tag)
+            deck.save()
+            return HttpResponseRedirect(reverse('decks'))
+        else:
+            return render(request,
+                          'notecards/create_deck.html',
+                          {'form': form})
+    form = deckForm()
+    return render(request, 'notecards/create_deck.html', {'form': form})
+
+
+@login_required
+def delete_deck(request):
+    '''
+    POST: Deletes the deck.
+    GET: Returns a page asking user to confirm the deletion.
+    '''
+    userID = request.user.id
+    user = User.objects.get(pk=userID)
+    if request.method == 'POST':
+        deckID = request.POST.get('did')
+        deck = get_object_or_404(Deck, pk=deckID)
+        if deck.author == user:
+            deck.delete()
+            # Return user to view all their remaining decks
+            return HttpResponseRedirect(reverse('get_user_decks',
+                                        kwargs={'user': user.username}))
+        else:
+            return HttpResponse(status=404)
+
+    if request.method == 'GET':
+        deckID = request.GET.get('did')
+        deck = get_object_or_404(Deck, pk=deckID)
+        if deck.author == user:
+            context_dict = {'deck': deck}
+            return render(request,
+                          'notecards/delete_confirm.html',
+                          context_dict)
+        else:
+            return HttpResponse(status=404)
 
 
 @login_required
@@ -282,43 +226,151 @@ def edit_deck(request, deckid):
 
 
 @login_required
-def clone_deck(request):
-    '''Creates a copy of a user's deck for another user to own.'''
-    deckid = request.GET.get('did')
+def get_card(request, deckid):
+    '''
+    Fetches a card to be presented to the user
+    '''
+    # Get information necessary to determine which deck to pull from
+    userid = request.user.id
+    user = User.objects.get(pk=userid)
+    deck = Deck.objects.filter(pk=deckid, author=user)
+    # Make sure deck actually has cards in it
+    if deck.count() > 0 and deck[0].card_set.count() > 0:
+        # Randomly select a card to draw, biasing towards weaker cards
+        minScore = deck.aggregate(Min('card__score'))
+        minScore = minScore['card__score__min']
+        maxScore = deck.aggregate(Max('card__score'))
+        maxScore = maxScore['card__score__max']
+        rscore = random.randint(minScore, maxScore)
+        deck = deck[0]
+        cards = deck.card_set.filter(score__lte=rscore)
+        rindex = random.randint(0, len(cards) - 1)
+        card = cards[rindex]
+
+        # 'mode' is used in the template to build the URL for fetching
+        # the next card.
+        context_dict = {'card': card, 'deck': deck, 'mode': 'get_card/'}
+
+        return render(request, 'notecards/drill.html', context_dict)
+    else:
+        return HttpResponse(status=404)
+
+
+def get_deck(request, deckid):
+    '''
+    Returns all cards in a deck in JSON format
+    '''
+    deck = get_object_or_404(Deck, pk=deckid)
+    cards = deck.card_set.all()
+    cardsJSON = serializers.serialize('json', cards)
+
+    return HttpResponse(cardsJSON, content_type='application/json')
+
+
+def get_decks(request):
+    '''
+    Fetches a maximum of 50 decks to display to the user in order of
+    creation date.
+    Returns a page populated with rows of said decks.
+    '''
+    page = request.GET.get('page')
+    if page:
+        page = int(page)
+    else:
+        # Default to 1st page if no page number present in GET request
+        page = 1
+    if page > 0:
+        start = (page - 1) * 50
+        end = start + 50
+        # Only fetch published decks
+        decks = Deck.objects.filter(published=True) \
+                            .order_by('-dateCreated')[start:end]
+        # last is a boolean that tells the template not to render the
+        # 'next' button if we're already on the last page as indicated
+        # by getting fewer than 50 decks in the query
+        last = len(decks) < 50
+
+        return render(request, 'notecards/decks.html', {'decks': decks,
+                                                        'next': page + 1,
+                                                        'prev': page - 1,
+                                                        'lastpg': last})
+    else:
+        return HttpResponse('Invalid page number')
+
+
+def get_user_decks(request, user):
+    '''
+    Fetches a maximum of 50 decks to display to the user in order of
+    creation date. The only decks returned are those belonging to the user.
+    Returns a page populated with rows of said decks.
+    '''
+    if request.method == 'GET':
+        user = User.objects.get(username=user)
+        page = request.GET.get('page')
+        if page:
+            page = int(page)
+        else:
+            page = 1
+        if page > 0:
+            start = (page - 1) * 50
+            end = start + 50
+            decks = Deck.objects.filter(author=user) \
+                                .order_by('-dateCreated')[start:end]
+            last = len(decks) < 50
+
+            return render(request, 'notecards/decks.html', {'decks': decks,
+                                                            'next': page + 1,
+                                                            'prev': page - 1,
+                                                            'lastpg': last})
+        else:
+            return HttpResponse('Invalid page number')
+
+
+@login_required
+def get_weak_card(request, deckid):
+    '''
+    Fetches a card with a score of 3 or less to be presented to the user.
+    '''
+    userid = request.user.id
+    user = User.objects.get(pk=userid)
+    deck = get_object_or_404(Deck, pk=deckid, author=user)
+    cards = deck.card_set.filter(score__lte=3)
+    if cards.count() > 0:
+        # If we have any weak cards then draw a random one
+        rindex = random.randint(0, len(cards) - 1)
+        card = cards[rindex]
+
+        # 'mode' is used in the template to build the URL for fetching
+        # the next card
+        context_dict = {'card': card, 'deck': deck, 'mode': 'gwc/'}
+
+        return render(request, 'notecards/drill.html', context_dict)
+    else:
+        return HttpResponse(status=404)
+
+
+def index(request):
+    '''
+    Simply returns the home page
+    '''
+    return render(request, 'notecards/index.html', {})
+
+
+@login_required
+def publish_deck(request):
+    '''
+    Makes a deck visable or invisible to other users when browsing decks.
+    '''
     userID = request.user.id
     user = User.objects.get(pk=userID)
-    deck = Deck.objects.get(pk=deckid)
-    # Make sure user isn't trying to clone their own deck
-    if deck.author != user:
-        newDeck, created = Deck.objects.get_or_create(author=user,
-                                                      title=deck.title)
-        # Check to make sure that user doesn't already have a deck the
-        # same title
-        if not created:
-            return HttpResponse('Error: You already own a deck with '
-                                'this title')
-        # Copy the deck
-        newDeck.slug = deck.slug
-        newDeck.description = deck.description,
-        newDeck.published = False
-        newDeck.save()
-        # Copy the tags
-        tags = deck.tags.names()
-        for tag in tags:
-            newDeck.tags.add(tag)
-        newDeck.save()
-        # Copy the cards
-        for card in deck.card_set.all():
-            newCard = Card(front=card.front,
-                           back=card.back,
-                           deck=newDeck,
-                           score=0)
-            newCard.save()
-        # Redirect user to their newly cloned deck
-        url = reverse('view_deck') + '?did=' + str(newDeck.id)
-        return HttpResponseRedirect(url)
-    else:
-        return HttpResponse('Error: You already own this deck')
+    if request.method == 'POST':
+        deckID = request.POST.get('did')
+        deck = get_object_or_404(Deck, pk=deckID)
+        if deck.author == user:
+            deck.published = not deck.published
+            deck.save()
+            return HttpResponse(status=200)
+    return HttpResponse(status=404)
 
 
 def view_deck(request):
@@ -339,51 +391,3 @@ def view_deck(request):
                     'deck': deck}
 
     return render(request, 'notecards/view_deck.html', context_dict)
-
-
-@login_required
-def delete_deck(request):
-    '''
-    POST: Deletes the deck.
-    GET: Returns a page asking user to confirm the deletion.
-    '''
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    if request.method == 'POST':
-        deckID = request.POST.get('did')
-        deck = get_object_or_404(Deck, pk=deckID)
-        if deck.author == user:
-            deck.delete()
-            # Return user to view all their remaining decks
-            return HttpResponseRedirect(reverse('get_user_decks',
-                                        kwargs={'user': user.username}))
-        else:
-            return HttpResponse(status=404)
-
-    if request.method == 'GET':
-        deckID = request.GET.get('did')
-        deck = get_object_or_404(Deck, pk=deckID)
-        if deck.author == user:
-            context_dict = {'deck': deck}
-            return render(request,
-                          'notecards/delete_confirm.html',
-                          context_dict)
-        else:
-            return HttpResponse(status=404)
-
-
-@login_required
-def publish_deck(request):
-    '''
-    Makes a deck visable or invisible to other users when browsing decks.
-    '''
-    userID = request.user.id
-    user = User.objects.get(pk=userID)
-    if request.method == 'POST':
-        deckID = request.POST.get('did')
-        deck = get_object_or_404(Deck, pk=deckID)
-        if deck.author == user:
-            deck.published = not deck.published
-            deck.save()
-            return HttpResponse(status=200)
-    return HttpResponse(status=404)

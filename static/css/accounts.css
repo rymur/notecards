@@ -29,6 +29,12 @@
     }
 }
 
+@media (max-width: 27em) {
+    .centerdiv {
+        width: 100%;
+    }
+}
+
 .centerdiv input {
     margin: 0.5em;
 }
