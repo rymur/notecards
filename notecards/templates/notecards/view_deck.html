@@ -5,7 +5,7 @@
 	{% if user == deck.author %}
 		<br />
 		<div class="col-md-12 text-center">
-			<a href="/notecards/get_card/{{ deck.id }}/">
+			<a href="{% url 'get_card' deck.id %}">
 				<button class="btn btn-success btn-wide">
 					Drill Cards
 				</button>
@@ -14,7 +14,7 @@
 		<br />
 		<br />
 		<div class="col-md-12 text-center">
-			<a href="/notecards/gwc/{{ deck.id }}/">
+			<a href="{% url 'get_weak_card' deck.id %}">
 				<button class="btn btn-danger btn-wide">
 					Hard Mode
 				</button>
@@ -103,7 +103,7 @@
 	<script type="text/javascript">
 		$("#cardcreate").submit(function(event) {
 			event.preventDefault();
-			var url = '/notecards/create_card/{{ deck.id }}/';
+			var url = "{% url 'create_card' deck.id %}";
 			var formData = $('#cardcreate').serialize();
 			$.ajax({
 				method: 'POST',
@@ -121,7 +121,7 @@
 			var delCard = $("#cards option:selected").val();
 			$.ajax({
 				method: 'DELETE',
-				url: '/notecards/edit_card/' + delCard + '/',
+				url: "/edit_card/" + delCard + "/",
 				success: function(data) {
 					$("#cards option[value='" + delCard +"']").remove();
 				}
@@ -141,7 +141,7 @@
 			$.ajax({
 				method: 'POST',
 				data: formData,
-				url: '/notecards/edit_card/' + editCard + '/',
+				url: "/edit_card/" + editCard + "/",
 				success: function(data) {
 					$("#cards option[value='" + editCard + "']").replaceWith(data);
 					$("#editdiv").hide();
