@@ -23,7 +23,7 @@
         
         $.ajax({
             method: 'POST',
-            url: '/notecards/check_answer/' + {{ deck.id }} + '/',
+            url: "{% url 'check_answer' deck.id %}",
             dataType: 'json',
             data: {cardid: {{ card.id }}, ans: $('#user_answer').val()},
             success: function(data) {
@@ -52,7 +52,7 @@
     });
 
     $(document).on('click', '#contBTN', function() {
-        window.location.replace('/notecards/{{ mode }}' + {{ deck.id }} + '/');
+        window.location.replace('/{{ mode }}' + {{ deck.id }} + '/');
     });
 
     var countdown = setTimeout(submitAnswer, 5000);
