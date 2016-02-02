@@ -30,7 +30,7 @@
 				<form method="POST" action="{% url 'edit_deck' deckid=deck.id %}">
 					{% csrf_token %}
 					{{ deckform.as_p }}
-					<input type="submit" value="Make Changes">
+					<input type="submit" value="Submit Changes">
 				</form>
 			{% else %}
 				{{ deckform.as_p }}	
