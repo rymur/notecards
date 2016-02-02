@@ -66,7 +66,7 @@ def clone_deck(request):
                                 'this title')
         # Copy the deck
         newDeck.slug = deck.slug
-        newDeck.description = deck.description,
+        newDeck.description = deck.description
         newDeck.published = False
         newDeck.save()
         # Copy the tags
