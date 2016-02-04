@@ -18,18 +18,18 @@
     <thead>
         <tr>
             <th>Title</th>
-            <th>Author</th>
+            <th class="mobilehide">Author</th>
             <th># of Cards</th>
-            <th>Tags</th>
+            <th class="mobilehide">Tags</th>
         </tr>
     </thead>
     <tbody id="decktable">
         {% for deck in decks %}
                 <tr class="clickable-row" data-href="{% url 'view_deck' %}?did={{ deck.id }}">
                     <td>{{ deck.title }}</td>
-                    <td>{{ deck.author }}</td>
+                    <td class="mobilehide">{{ deck.author }}</td>
                     <td>{{ deck.numCards }}</td>
-                    <td>
+                    <td class="mobilehide">
                         {% for tag in deck.tags.all %}
                             {% if forloop.counter == deck.tags.all|length %}
                                 {{ tag.name }}
