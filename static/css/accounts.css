@@ -27,6 +27,10 @@
     width: 27em;
 }
 
+.login-input {
+    margin: 0.5em;
+}
+
 .signup label {
     width: 40%;
 }
@@ -37,8 +41,4 @@ label[for=id_remember] {
 
 h1 {
     text-align: center;
-}
-
-input {
-    margin: 0.5em;
 }
