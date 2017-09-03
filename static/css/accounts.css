@@ -1,3 +1,7 @@
+#id_username {
+    width: auto;
+}
+
 #google_login {
     background-image: url('../images/btn_google_signin_dark_normal_web.png');
     width: 193px;
@@ -13,10 +17,6 @@
     background-image: url('../images/btn_google_signin_dark_pressed_web.png');
 }
 
-.form_div {
-    text-align: center;
-}
-
 #signinbtn {
     margin: 0.5em;
 }
@@ -25,6 +25,10 @@
     border: 0.5em gray solid;
     padding: 1em;
     width: 27em;
+}
+
+.form_div {
+    text-align: center;
 }
 
 .login-input {
