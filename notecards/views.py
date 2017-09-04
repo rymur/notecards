@@ -303,3 +303,8 @@ def publish_deck(request):
             deck.save()
             return HttpResponse(status=200)
     return HttpResponse(status=404)
+
+@login_required
+def logout(request):
+    logout(request)
+    return render(request, 'notecards/', {})
