@@ -39,7 +39,7 @@ for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
             <input id="id_login" class="login-input" maxlength="30" name="login" placeholder="Username" type="text" />{{ form.login.errors }}<br>
             <input id="id_password"  class="login-input" name="password" placeholder="Password" type="password" />{{ form.password.errors }}<br>
             <div class="remember-forgot-section">
-                <input id="id_remember" name="remember" type="checkbox" />
+                <input id="id_remember" class="login-input" name="remember" type="checkbox" />
                 <label for="id_remember">Remember Me</label>
                 <br />
                 <a class="forgot" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
