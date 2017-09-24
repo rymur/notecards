@@ -1,3 +1,7 @@
+#id_username {
+    width: auto;
+}
+
 #google_login {
     background-image: url('../images/btn_google_signin_dark_normal_web.png');
     width: 193px;
@@ -5,21 +9,16 @@
     margin: auto;
 }
 
-#google_login:active {
-    background-image: url('../images/btn_google_signin_dark_pressed_web.png');
-}
-
 #google_login:hover {
     background-image: url('../images/btn_google_signin_dark_focus_web.png');
 }
 
-#signinbtn {
-    margin: 0.5em;
+#google_login:active {
+    background-image: url('../images/btn_google_signin_dark_pressed_web.png');
 }
 
-#signupbtn {
-    display: block;
-    margin: 0 auto;
+#signinbtn {
+    margin: 0.5em;
 }
 
 .centerdiv {
@@ -28,34 +27,22 @@
     width: 27em;
 }
 
-@media (max-width: 767px) {
-    .centerdiv {
-        margin: 0 auto;
-    }
-}
-
-@media (max-width: 27em) {
-    .centerdiv {
-        width: 100%;
-    }
-}
-
-.centerdiv input {
-    margin: 0.5em;
-}
-
 .form_div {
     text-align: center;
+}
+
+.login-input {
+    margin: 0.5em;
 }
 
 .signup label {
     width: 40%;
 }
 
-h1 {
-    text-align: center;
-}
-
 label[for=id_remember] {
     width: auto;
+}
+
+h1 {
+    text-align: center;
 }
